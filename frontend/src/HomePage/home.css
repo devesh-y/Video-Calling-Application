@@ -1,0 +1,58 @@
+/* #devesh-y-socialmedia{
+    display: flex;
+    background-color: aqua;
+    width: fit-content;
+    
+    justify-content: center;
+} */
+@font-face {
+    font-family: "BarkingCat";
+    src: url("BarkingCatDEMO.otf");
+}
+
+#logo {
+    font-size: 3em;
+    color: blue;
+    font-weight: 900;
+    background-color: rgb(255, 232, 21);
+    width: fit-content;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-family: "BarkingCat";
+    margin: 20px;
+    margin-bottom: 100px;
+}
+
+#container {
+    background-color: rgb(187, 242, 242);
+    display: flex;
+    margin:0px 50px ;
+}
+
+#container>div {
+    flex: 1;
+}
+
+#meet-creation {
+    display: flex;
+
+}
+
+#meet-creation>input {
+    font-size: 1.1em;
+    border-radius: 10px;
+    padding-left: 10px;
+    width: 250px;
+}
+
+
+#meet-creation>button {
+    outline: none;
+    border: none;
+    background-color: rgb(144, 144, 248);
+    padding: 10px;
+    border-radius: 10px;
+    color: white;
+    font-size: 1.1em;
+    margin-right: 10px;
+}

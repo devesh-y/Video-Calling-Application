@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "outDir": "dist",
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2022"
+  },
+  "compileOnSave": true,
+  "include": [
+    "./"
+  ]
+}
