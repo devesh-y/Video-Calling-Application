@@ -1,24 +1,46 @@
 import "./home.css"
+import {useState} from "react"
 
-function Home(){
+function Meet_create(){
+    function joinmeeting(){
+
+    }
+    function newmeeting(){
+
+    }
+    const [code,setcode]=useState("");
     return <>
-    <div id="logo">
-        Crowd Connect
-    </div>
+        <div id="meet-creation">
+            <button onClick={newmeeting}>New meeting</button>
+            <input type="text" value={code} placeholder="Enter an existing code" onChange={(e):void=>setcode(e.target.value)}></input>
+            {code != "" ? <p onClick={joinmeeting} >Join</p>:<></>}
+            
+        </div>
+    </>
+}
+function Home() {
+    return <>
+        <div id="logo">
+            CrowdConnect
+        </div>
         <div id="container">
-            <div>
-                <p style={{ fontSize: "2.5em",marginBottom:"30px" }}>Secure video conferencing for everyone</p>
-                <p style={{fontSize:"1.1em", marginBottom:"30px"}}>Connect with your friends, family, and colleagues like never before. </p>
-                <div id="meet-creation">
-                    <button>New meeting</button>
-                    <input type="text" placeholder="Enter a code"/>
-                    <p style={{height:"inherit",display:"flex",alignItems:"center"}}>Join</p>
-                </div>
+            <div id="main">
+                <p style={{ fontSize: "2.6em", marginBottom: "30px" }}>Secure video conferencing for everyone</p>
+                <p style={{ fontSize: "1.1em", marginBottom: "30px", color: "grey" }}>Connect with your friends, family, and colleagues like never before. </p>
+                <Meet_create/>
+                <hr style={{ marginTop: "50px" }}></hr>
+
             </div>
             <div id="key-features">
+                <ul>
+                    <li>Experience seamless and crystal-clear video calls with multiple participants from anywhere in the world. </li>
+                    <li>Stay connected, share moments, and collaborate effortlessly with our user-friendly interface</li>
+                    <li>Start your video calls today and bring people together in a whole new way. </li>
+                </ul>
 
             </div>
         </div>
+        <p style={{ marginLeft: "50px",marginTop:"50px"}} ><a style={{ textDecoration: "none", color: "#0238fd", fontWeight: "700" }} href="https://github.com/devesh-y/Video-Calling-Application#readme" target="_blank">Learn More</a> about CrowdConnect</p>
     </>
 }
 
