@@ -1,12 +1,19 @@
 import "./home.css"
-import {useState} from "react"
+import {useContext, useState} from "react"
+import { SocketContext } from "../Socket/SocketClient";
 
 function Meet_create(){
+    const socket=useContext(SocketContext);
     function joinmeeting(){
 
     }
     function newmeeting(){
+        socket.emit("create-room");
+        socket.on("room-created",(code)=>{
+            console.log(code);
+        })
 
+        
     }
     const [code,setcode]=useState("");
     return <>
