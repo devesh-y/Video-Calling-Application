@@ -1,26 +1,41 @@
 import "./home.css"
 import {useContext, useState} from "react"
 import { SocketContext } from "../Socket/SocketClient";
+import { useNavigate } from "react-router-dom";
 
 function Meet_create(){
     const socket=useContext(SocketContext);
-    function joinmeeting(){
-
-    }
-    function newmeeting(){
-        socket.emit("create-room");
-        socket.on("room-created",(code)=>{
-            console.log(code);
+    function joinmeeting(navigate:any){
+        socket.emit("join-meet",code);
+        socket.on("meet-info",(check)=>{
+            if(check==="notfound"){
+                alert("Invalid code");
+                return;
+            }
+            else{
+                navigate(`/${code}`);
+                return;
+            }
         })
 
-        
     }
+    function newmeeting(navigate:any){
+        socket.emit("create-room");
+        socket.on("room-created",(code)=>{
+            const expired_time=new Date();
+            expired_time.setTime(expired_time.getTime() + 24 * 60 * 60 * 1000); 
+            document.cookie=`${code}=host;expires=${expired_time.toLocaleString()}`;
+            navigate(`/${code}`);
+            return;
+        })
+    }
+    const navigate=useNavigate();
     const [code,setcode]=useState("");
     return <>
         <div id="meet-creation">
-            <button onClick={newmeeting}>New meeting</button>
-            <input type="text" value={code} placeholder="Enter an existing code" onChange={(e):void=>setcode(e.target.value)}></input>
-            {code != "" ? <p onClick={joinmeeting} >Join</p>:<></>}
+            <button onClick={()=>newmeeting(navigate)}>New meeting</button>
+            <input type="text" value={code} placeholder="Enter an existing code" onChange={(e)=>setcode(e.target.value)}></input>
+            {code != "" ? <p onClick={()=>joinmeeting(navigate)} >Join</p>:<></>}
             
         </div>
     </>

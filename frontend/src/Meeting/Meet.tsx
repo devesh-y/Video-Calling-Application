@@ -1,7 +1,8 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect,useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meet.css"
+import ReactPlayer from "react-player";
 function Toolbars() {
     const [micstate, setmic] = useState("mic");
     const [videostate, setvideo] = useState("videocam")
@@ -61,20 +62,39 @@ function Toolbars() {
     </>
 }
 
+function Videos() {
+    const [mystream, setmystream] = useState<MediaStream | undefined>();
+
+    useEffect(()=>{
+        const getmedia=async()=>{
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: true, video: true
+            });
+            setmystream(stream);
+        }
+        getmedia();
+    },[]);
+
+    return <>
+        <ReactPlayer playing url={mystream} width="130px" height="100px" />
+    </>
+}
+
 function Meet() {
-    const socketio = useContext(SocketContext);
-    const {code}=useParams();
+    const socket = useContext(SocketContext);
+    const { code } = useParams();
+
     return <>
         <div id="meet-container">
             <div id="crowdmeet">
                 <div id="videos">
-
+                    <Videos />
                 </div>
                 <div id="sidepanel">
 
                 </div>
             </div>
-            
+
             <div id="toolbar">
                 {<Toolbars />}
             </div>
