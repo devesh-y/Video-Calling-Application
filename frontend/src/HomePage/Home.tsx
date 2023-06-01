@@ -7,7 +7,8 @@ function Meet_create(){
     const socket=useContext(SocketContext);
     function joinmeeting(navigate:any){
         socket.emit("join-meet",code);
-        socket.on("meet-info",(check)=>{
+        socket.on("join-meet",(check)=>{
+            socket.off("join-meet");
             if(check==="notfound"){
                 alert("Invalid code");
                 return;
@@ -21,7 +22,7 @@ function Meet_create(){
     }
     function newmeeting(navigate:any){
         socket.emit("create-room");
-        socket.on("room-created",(code)=>{
+        socket.on("create-room",(code)=>{
             const expired_time=new Date();
             expired_time.setTime(expired_time.getTime() + 24 * 60 * 60 * 1000); 
             document.cookie=`${code}=host;expires=${expired_time.toLocaleString()}`;

@@ -16,6 +16,7 @@ const socketio = new Server(httpserver,{
         origin: "*"
     }
 });
+
 socketio.on("connection", (socket) => {
     console.log(`connected to client of id ${socket.id}`);
     socket.on("create-room",()=>{
@@ -34,16 +35,32 @@ socketio.on("connection", (socket) => {
         }
         code=code.slice(0,-1);
         socket.join(code);
-        socket.emit("room-created",code);
+        socket.emit("create-room",code);
     });
 
     socket.on("join-meet",(code)=>{
         if(socketio.sockets.adapter.rooms.has(code)){
-            socket.emit("meet-info","found");
+            socket.emit("join-meet","found"); 
         }
         else{
-            socket.emit("meet-info","notfound");
+            socket.emit("join-meet","notfound");
         }
+    })
+
+    //sending offer to new user from existing
+    socket.on("redirectoffers",({to,offer})=>{
+        socket.to(to).emit("offerscame",{offer,from:socket.id});
+    })
+
+    //triggering existing users to send offers to new user
+    socket.on("sendoffers",(code)=>{
+        socket.to(code).emit("sendoffers",socket.id);
+    })
+    
+
+    //new user sending answers
+    socket.on("sendAnswer",({to,myanswer })=>{
+        socket.to(to).emit("sendAnswer",{myanswer,from:socket.id});
     })
 
 });
