@@ -6,14 +6,14 @@ import Meet from './Meeting/Meet.tsx'
 import "./index.css"
 import SocketProvider from './Socket/SocketClient.tsx';
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-    <React.StrictMode>
-        <SocketProvider>
-            <BrowserRouter>
-                <Routes>
-                    <Route path='/' element={<Home />} />
-                    <Route path='/:code' element={<Meet />} />
-                </Routes>
-            </BrowserRouter>
-        </SocketProvider>
-    </React.StrictMode>,
+
+    <SocketProvider>
+        <BrowserRouter>
+            <Routes>
+                <Route path='/' element={<Home />} />
+                <Route path='/:code' element={<Meet />} />
+            </Routes>
+        </BrowserRouter>
+    </SocketProvider>
+
 )

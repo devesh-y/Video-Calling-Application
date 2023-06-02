@@ -19,6 +19,7 @@ const socketio = new Server(httpserver,{
 
 socketio.on("connection", (socket) => {
     console.log(`connected to client of id ${socket.id}`);
+    console.log(`Total connected sockets: ${socketio.sockets.sockets.size}`);
     socket.on("create-room",()=>{
         const es = crypto.randomBytes(128).toString('base64').slice(0,20);
         var code:string="";
@@ -36,11 +37,16 @@ socketio.on("connection", (socket) => {
         code=code.slice(0,-1);
         socket.join(code);
         socket.emit("create-room",code);
+        console.log("room created");
+        
     });
 
     socket.on("join-meet",(code)=>{
         if(socketio.sockets.adapter.rooms.has(code)){
+            socket.join(code);
             socket.emit("join-meet","found"); 
+            console.log("meet joined");
+            
         }
         else{
             socket.emit("join-meet","notfound");
@@ -53,14 +59,19 @@ socketio.on("connection", (socket) => {
     })
 
     //triggering existing users to send offers to new user
-    socket.on("sendoffers",(code)=>{
+    socket.on("sendoffers",(code)=>{        
         socket.to(code).emit("sendoffers",socket.id);
     })
     
 
-    //new user sending answers
+    //sending answers - both
     socket.on("sendAnswer",({to,myanswer })=>{
-        socket.to(to).emit("sendAnswer",{myanswer,from:socket.id});
+        socket.to(to).emit("sendAnswer",{answer:myanswer,from:socket.id});
+    })
+
+    //offer from new users to existing users
+    socket.on("OfferNewToExist",({myoffer,to})=>{
+        socket.to(to).emit("OfferNewToExist",{offer:myoffer,from:socket.id});
     })
 
 });

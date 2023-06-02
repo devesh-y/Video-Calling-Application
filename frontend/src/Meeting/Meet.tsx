@@ -1,9 +1,10 @@
-import { useContext, useState, useEffect, memo } from "react";
+import { useContext, useState, useEffect, memo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meet.css"
 import { peerservice } from "../WebRTC/p2p";
 import ReactPlayer from "react-player";
+import { Socket } from "socket.io-client";
 function Toolbars() {
     const [micstate, setmic] = useState("mic");
     const [videostate, setvideo] = useState("videocam")
@@ -67,73 +68,10 @@ function Toolbars() {
     </>
 }
 
-const Myvideo = memo((props: any) => {
-    const { mystream } = props;
-    return <>
-        <ReactPlayer playing muted url={mystream} width="130px" height="100px" />
-    </>
-});
-const Participants = (props: any) => {
-    
-    return <>
-
-    </>
-}
-function Videos() {
-    const [mapping,setmap]=useState(new Map());
-    const { code } = useParams();
-    const [mystream, setmystream] = useState<MediaStream | undefined>();
-    const socket = useContext(SocketContext);
-    
-
-    //first triggering to get offers from existing  --for new user
-    socket.emit("sendoffers", code);
-
-
-    //new user get offers from existing
-    socket.on("offerscame", ({offer,from}) => {
-        //answer this offer 
-        const peer = new peerservice();
-        const newmap=new Map();
-        newmap.set(from,peer);
-        setmap(newmap);
-        async function answeroffer(){
-            return await peer.getanswer(offer,mystream);
-        }
-        const myanswer=answeroffer();
-        socket.emit("sendAnswer",{to:from,myanswer});
-        //and create your offer && send yours
-
-        async function createoffer() {
-            return await peer.getoffer();
-        }
-        const myoffer = createoffer();
-        socket.emit("")
-    })
-    
-
-
-   //existing user send offer to new user
-    socket.on("sendoffers", (to) => {
-        async function createoffer() {
-            const peer = new peerservice();
-            const newmap=new Map(mapping);
-            newmap.set(to,peer);
-            setmap(newmap)
-            return await peer.getoffer();
-        }
-        const offer = createoffer();
-        socket.emit("redirectoffers", {to,offer }); 
-    })
-
-
-    //existing user getting answer from new user
-    socket.on("sendAnswer",({myanswer,from})=>{
-        
-    })
-
-    
+const Myvideo = memo(() => {
+    const [mystream, setmystream] = useState<MediaStream>();
     useEffect(() => {
+
         const getmedia = async () => {
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: true, video: true
@@ -142,17 +80,136 @@ function Videos() {
         }
         getmedia();
 
-    }, []);
+    }, [mystream]);
     return <>
-        <Myvideo mystream={mystream} />
-        <Participants  />
+        {mystream!=undefined && <ReactPlayer playing muted url={mystream} width="130px" height="100px" />}
+    </>
+});
+const Participants = (props: any) => {
+    
+    const { mymap} = props;
+    console.log(mymap.size);
+    const [remotestream,setremotestream]=useState<MediaStream>();
+    const marray=Array.from(mymap as Map<Socket,peerservice>).map(([_socket,peer])=>{
+        peer.peer.addEventListener("track", (ev)=>{
+            const stream= ev.streams[0] ;
+            setremotestream(stream);
+        })
+    });
+    return <>
+        return <ReactPlayer playing url={remotestream} width="130px" height="100px" />
+    </>
+}
+
+function Videos() {
+    const mapping= useRef(new Map());
+    const { code } = useParams();
+    const [peernumber,setpeers]=useState(0);
+    const socket = useContext(SocketContext);
+    
+    useEffect(()=>{
+        //first triggering to get offers from existing  --for new user
+        socket.emit("sendoffers", code);
+        console.log("triggering to get offers from existing users");
+        
+
+        //new user get offers from existing
+        socket.on("offerscame", ({ offer, from }) => {
+            console.log("offer coming from existing users");
+
+            
+            const peer = new peerservice();
+            const newmap = new Map(mapping.current);
+            newmap.set(from, peer);
+            mapping.current=newmap;
+            setpeers(mapping.current.size);
+            async function answerandcreate() {
+                //answer this offer 
+                var myanswer = await peer.getanswer(offer);
+                socket.emit("sendAnswer", { to: from, myanswer });
+                console.log("offer answered");
+
+                //and create your offer && send yours
+                try {
+                    var myoffer = await peer.getoffer();
+                    socket.emit("OfferNewToExist", { myoffer, to: from });
+                    console.log("offer sent to existing users ");
+
+                } catch (error) {
+                    console.log(error);
+
+                    console.log("error in sending offers ");
+
+                } 
+            }
+            answerandcreate();
+            
+        })
+
+
+        // existing user send offer to new user
+        socket.on("sendoffers", (to) => 
+        {
+            console.log("sending offers to new user");
+            async function createoffer() {
+                const peer = new peerservice();
+                const newmap = new Map(mapping.current);
+                newmap.set(to, peer);
+                mapping.current=newmap;
+                setpeers(mapping.current.size);
+                var offer = await peer.getoffer();
+                socket.emit("redirectoffers", { to, offer });
+                console.log("offer sent to new users");
+            }
+            createoffer();
+            
+            
+
+        })
+
+        //existing user getting offer from new user
+        socket.on("OfferNewToExist", ({ offer, from }) => {
+            console.log("getting offer from new user");
+            const peer = mapping.current.get(from);
+            async function answeroffer() {
+                var myanswer = await peer.getanswer(offer);
+                socket.emit("sendAnswer", { to: from, myanswer });
+                console.log("offer answered");
+            }
+            answeroffer();
+            
+    
+        })
+
+        //user getting answers
+        socket.on("sendAnswer", ({ answer, from }) => {
+            console.log("answers coming");
+            console.log(mapping.current);
+            
+            var peer: peerservice = mapping.current.get(from);
+            peer.setLocalDescription(answer); 
+            async function attachmedia(){
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: true, video: true
+                });
+                for (const track of stream.getTracks()) {
+                    peer.peer.addTrack(track, stream);
+                }
+            }
+            attachmedia();
+        })
+    },[])
+    
+
+    
+    return <>
+        <Myvideo />
+        <Participants mymap={mapping.current} /> 
     </>
 }
 
 function Meet() {
-    const socket = useContext(SocketContext);
-    const { code } = useParams();
-    socket.emit("offersrequest", code);
+
     return <>
         <div id="meet-container">
             <div id="crowdmeet">

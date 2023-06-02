@@ -1,4 +1,4 @@
-class peerservice {
+export class peerservice {
 
     peer: RTCPeerConnection;
     constructor() {
@@ -10,17 +10,18 @@ class peerservice {
         if(this.peer){
             const offer= await this.peer.createOffer();
             await this.peer.setLocalDescription(new RTCSessionDescription(offer));
-            return this.peer.localDescription;
+            return offer;
         }
     }
-    async getanswer(offer:any,mystream:any){
+    async getanswer(offer:any){
         await this.peer.setRemoteDescription(offer);
-        mystream.getTracks().forEach((track: any) => {
-            this.peer.addTrack(track, mystream);
-        });
         const answer = await this.peer.createAnswer();
-        await this.peer.setLocalDescription(answer);
-        return this.peer.localDescription;
+        await this.peer.setLocalDescription(new RTCSessionDescription(answer));
+        return answer;
+    }
+    async setLocalDescription(ans:any){
+        if(this.peer){
+            await this.peer.setRemoteDescription(new RTCSessionDescription(ans));
+        }
     }
 }
-export {peerservice};
