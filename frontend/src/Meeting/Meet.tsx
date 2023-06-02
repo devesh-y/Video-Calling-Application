@@ -86,18 +86,24 @@ const Myvideo = memo(() => {
 });
 const Participants = (props: any) => {
 
-    const { mymap, remotestream } = props;
-    console.log(mymap.size);
+    const { streams} = props;
+    console.log("the size of map is ",streams.size);
+    
+    const marray=Array.from(streams as Map<peerservice,MediaStream>).map(([_peer,stream],index)=>{
+        return <ReactPlayer key={index} playing url={stream} width="130px" height="100px" />
+        
+    });
     return <>
-        {remotestream && <ReactPlayer playing url={remotestream} width="130px" height="100px" />}
+        {marray}
     </>
 }
 
 function Videos() {
     const mapping = useRef(new Map());
+    const peerstream=useRef(new Map());
+    const [_peers,setpeers]=useState(0);
     const { code } = useParams();
     const socket = useContext(SocketContext);
-    const [remotestream, setremotestream] = useState<MediaStream>();
     useEffect(() => {
         //first triggering to get offers from existing  --for new user
         socket.emit("sendoffers", code);
@@ -109,24 +115,17 @@ function Videos() {
         {
             console.log("offer coming from existing users");
             const peer = new peerservice();
-            peer.peer.oniceconnectionstatechange = () => {
-                console.log('ICE connection state:', peer.peer.iceConnectionState);
-                if (peer.peer.iceConnectionState === 'connected') {
-                    console.log('WebRTC connection successful!');
-                } else if (peer.peer.iceConnectionState === 'failed' || peer.peer.iceConnectionState === 'disconnected') {
-                    console.log('WebRTC connection failed!');
-                }
-            };
             peer.peer.addEventListener("negotiationneeded", async () => {
                 const offer = await peer.getoffer();
                 socket.emit("peer:negoNeeded", { offer, to:from });
             })
             
             peer.peer.addEventListener("track", (ev) => {
-                console.log("this event triggered");
-
+                console.log("track listerner called");
+                
                 const stream = ev.streams[0];
-                setremotestream(stream);
+                peerstream.current.set(peer,stream);
+                setpeers(peerstream.current.size);
             })
             const newmap = new Map(mapping.current);
             newmap.set(from, peer);
@@ -140,7 +139,7 @@ function Videos() {
                 console.log("offer answered");
 
                 //and create your offer && send yours
-                try {
+                try {  
                     var myoffer = await peer.getoffer();
                     socket.emit("OfferNewToExist", { myoffer, to: from });
                     console.log("offer sent to existing users ");
@@ -164,23 +163,16 @@ function Videos() {
             async function createoffer() 
             {
                 const peer = new peerservice();
-                peer.peer.oniceconnectionstatechange = () => {
-                    console.log('ICE connection state:', peer.peer.iceConnectionState);
-                    if (peer.peer.iceConnectionState === 'connected') {
-                        console.log('WebRTC connection successful!');
-                    } else if (peer.peer.iceConnectionState === 'failed' || peer.peer.iceConnectionState === 'disconnected') {
-                        console.log('WebRTC connection failed!');
-                    }
-                };
                 peer.peer.addEventListener("negotiationneeded", async () => {
                     const offer = await peer.getoffer();
                     socket.emit("peer:negoNeeded", { offer, to });
                 })
 
                 peer.peer.addEventListener("track", (ev) => {
-                    console.log("this event triggered");
+                    console.log("track listerner called");
                     const stream = ev.streams[0];
-                    setremotestream(stream);
+                    peerstream.current.set(peer, stream);
+                    setpeers(peerstream.current.size);
                 })
                 const newmap = new Map(mapping.current);
                 newmap.set(to, peer);
@@ -191,9 +183,6 @@ function Videos() {
                 console.log("offer sent to new users");
             }
             createoffer();
-
-
-
         })
 
         //existing user getting offer from new user
@@ -219,13 +208,10 @@ function Videos() {
             peer.setLocalDescription(answer);
             async function attachmedia() {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: true, video: true
+                    audio: false, video: true
                 });
 
-                //adding media to peer
                 for (const track of stream.getTracks()) {
-                    console.log("adding tracks");
-
                     peer.peer.addTrack(track, stream);
                 }
                 
@@ -249,7 +235,7 @@ function Videos() {
 
     return <>
         <Myvideo />
-        <Participants mymap={mapping.current} remotestream={remotestream} />
+        <Participants  streams={peerstream.current} />
     </>
 }
 
