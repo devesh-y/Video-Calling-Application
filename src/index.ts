@@ -74,6 +74,14 @@ socketio.on("connection", (socket) => {
         socket.to(to).emit("OfferNewToExist",{offer:myoffer,from:socket.id});
     })
 
+    //handling negotiation
+    socket.on("peer:negoNeeded",({offer,to})=>{
+        socket.to(to).emit("peer:negoNeeded",{from:socket.id,offer});
+    })
+
+    socket.on("peer:negodone",({to,answer})=>{
+        socket.to(to).emit("peer:negofinal",{from:socket.id,answer})
+    })
 });
 
 
