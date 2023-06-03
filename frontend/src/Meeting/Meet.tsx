@@ -240,9 +240,27 @@ function Videos() {
 }
 
 function Meet() {
+    const socket = useContext(SocketContext);
+    const { code } = useParams();
 
+    const WrongPage = () => {
+        useEffect(() => {
+            socket.emit("join-meet", code);
+            socket.on("join-meet", (check) => {
+                socket.off("join-meet");
+                if (check === "found") {
+                    alert("Invalid code");
+                    return;
+                }
+            })
+        })
+        return <>
+
+        </>
+    }
+    const [currentpage,changepage]=useState("wrong");
     return <>
-        <div id="meet-container">
+        {currentpage==="wrong"? <WrongPage/> :<div id="meet-container">
             <div id="crowdmeet">
                 <div id="videos">
                     <Videos />
@@ -256,7 +274,7 @@ function Meet() {
                 <Toolbars />
             </div>
 
-        </div>
+        </div>}
 
     </>
 }
