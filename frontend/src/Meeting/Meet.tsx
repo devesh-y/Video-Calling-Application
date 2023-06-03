@@ -258,7 +258,7 @@ function Meet() {
 
         </>
     }
-    const [currentpage,changepage]=useState("wrong");
+    const [currentpage,_changepage]=useState("wrong");
     return <>
         {currentpage==="wrong"? <WrongPage/> :<div id="meet-container">
             <div id="crowdmeet">
