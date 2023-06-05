@@ -82,6 +82,11 @@ socketio.on("connection", (socket) => {
     socket.on("peer:negodone",({to,answer})=>{
         socket.to(to).emit("peer:negofinal",{from:socket.id,answer})
     })
+
+
+    socket.on("disconnect",()=>{
+        
+    })
 });
 
 
