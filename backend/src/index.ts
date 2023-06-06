@@ -20,6 +20,7 @@ const socketio = new Server(httpserver,{
 socketio.on("connection", (socket) => {
     console.log(`connected to client of id ${socket.id}`);
     console.log(`Total connected sockets: ${socketio.sockets.sockets.size}`);
+    var socketroom:any;
     socket.on("create-room",()=>{
         const es = crypto.randomBytes(128).toString('base64').slice(0,20);
         var code:string="";
@@ -37,6 +38,7 @@ socketio.on("connection", (socket) => {
         code=code.slice(0,-1);
         socket.join(code);
         socket.emit("create-room",code);
+        socketroom = code;
         console.log("room created");
         
     });
@@ -44,6 +46,7 @@ socketio.on("connection", (socket) => {
     socket.on("join-meet",(code)=>{
         if(socketio.sockets.adapter.rooms.has(code)){
             socket.join(code);
+            socketroom=code;
             socket.emit("join-meet","found"); 
             console.log("meet joined");
             
@@ -85,6 +88,8 @@ socketio.on("connection", (socket) => {
 
 
     socket.on("disconnect",()=>{
+        console.log("socket disconnected");
+        socket.to(socketroom).emit("disconnectuser",socket.id);
         
     })
 });

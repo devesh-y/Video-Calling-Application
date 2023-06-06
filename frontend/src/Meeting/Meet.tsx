@@ -229,6 +229,21 @@ function Videos() {
             const peer:peerservice=mapping.current.get(from);
             await peer.setLocalDescription(answer);
         })
+
+
+        //on disconnect other users
+        socket.on("disconnectuser",(from)=>{
+            const peer: peerservice = mapping.current.get(from);
+            const stream=peerstream.current.get(peer)
+            for (const track of stream.getTracks()) {
+                track.stop();
+            }
+            peer.peer.close();
+            mapping.current.delete(from);
+            peerstream.current.delete(peer);
+            setpeers(peerstream.current.size);
+
+        })
     }, [])
 
 
@@ -258,9 +273,9 @@ function Meet() {
 
         </>
     }
-    const [currentpage,_changepage]=useState("wrong");
+    // const [currentpage,_changepage]=useState("wrong");
     return <>
-        {currentpage==="wrong"? <WrongPage/> :<div id="meet-container">
+        <div id="meet-container">
             <div id="crowdmeet">
                 <div id="videos">
                     <Videos />
@@ -274,7 +289,7 @@ function Meet() {
                 <Toolbars />
             </div>
 
-        </div>}
+        </div>
 
     </>
 }
