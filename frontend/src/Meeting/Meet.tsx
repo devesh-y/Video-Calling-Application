@@ -2,6 +2,7 @@ import { useContext, useState, useEffect, memo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meet.css"
+import { ColorRing } from "react-loader-spinner";
 import { peerservice } from "../WebRTC/p2p";
 import ReactPlayer from "react-player";
 function Toolbars() {
@@ -88,20 +89,20 @@ const Participants = (props: any) => {
 
     const { streams} = props;
     console.log("the size of map is ",streams.size);
-    
-    const marray=Array.from(streams as Map<peerservice,MediaStream>).map(([_peer,stream],index)=>{
+
+    const marray=Array.from(streams as Map<peerservice,MediaStream>).map(([_peer, stream],index)=>{
         return <ReactPlayer key={index} playing url={stream} width="130px" height="100px" />
-        
+
     });
     return <>
         {marray}
     </>
 }
 
-function Videos() {
+const  Videos=()=> {
     const mapping = useRef(new Map());
-    const peerstream=useRef(new Map());
-    const [_peers,setpeers]=useState(0);
+    const peerstream = useRef(new Map());
+    const [_peers, setpeers] = useState(0);
     const { code } = useParams();
     const socket = useContext(SocketContext);
     useEffect(() => {
@@ -111,25 +112,23 @@ function Videos() {
 
 
         //new user get offers from existing
-        socket.on("offerscame", ({ offer, from }) => 
-        {
+        socket.on("offerscame", ({ offer, from }) => {
             console.log("offer coming from existing users");
             const peer = new peerservice();
             peer.peer.addEventListener("negotiationneeded", async () => {
                 const offer = await peer.getoffer();
-                socket.emit("peer:negoNeeded", { offer, to:from });
+                socket.emit("peer:negoNeeded", { offer, to: from });
             })
-            
+
             peer.peer.addEventListener("track", (ev) => {
                 console.log("track listerner called");
-                
+
                 const stream = ev.streams[0];
-                peerstream.current.set(peer,stream);
+                peerstream.current.set(peer, stream);
                 setpeers(peerstream.current.size);
             })
-            const newmap = new Map(mapping.current);
-            newmap.set(from, peer);
-            mapping.current = newmap;
+            
+            mapping.current.set(from,peer);
 
             async function answerandcreate() 
             {
@@ -139,7 +138,7 @@ function Videos() {
                 console.log("offer answered");
 
                 //and create your offer && send yours
-                try {  
+                try {
                     var myoffer = await peer.getoffer();
                     socket.emit("OfferNewToExist", { myoffer, to: from });
                     console.log("offer sent to existing users ");
@@ -157,11 +156,9 @@ function Videos() {
 
 
         // existing user send offer to new user
-        socket.on("sendoffers", (to) => 
-        {
+        socket.on("sendoffers", (to) => {
             console.log("sending offers to new user");
-            async function createoffer() 
-            {
+            async function createoffer() {
                 const peer = new peerservice();
                 peer.peer.addEventListener("negotiationneeded", async () => {
                     const offer = await peer.getoffer();
@@ -174,9 +171,8 @@ function Videos() {
                     peerstream.current.set(peer, stream);
                     setpeers(peerstream.current.size);
                 })
-                const newmap = new Map(mapping.current);
-                newmap.set(to, peer);
-                mapping.current = newmap;
+
+                mapping.current.set(to,peer);
 
                 var offer = await peer.getoffer();
                 socket.emit("redirectoffers", { to, offer });
@@ -188,7 +184,7 @@ function Videos() {
         //existing user getting offer from new user
         socket.on("OfferNewToExist", ({ offer, from }) => {
             console.log("getting offer from new user");
-            const peer = mapping.current.get(from);
+            const peer:peerservice = mapping.current.get(from);
             async function answeroffer() {
                 var myanswer = await peer.getanswer(offer);
                 socket.emit("sendAnswer", { to: from, myanswer });
@@ -204,8 +200,11 @@ function Videos() {
             console.log("answers coming");
             console.log(mapping.current);
 
-            var peer: peerservice = mapping.current.get(from);
-            peer.setLocalDescription(answer);
+            const peer: peerservice = mapping.current.get(from);
+            async function someimportant(){
+                await peer.setLocalDescription(answer);
+            }
+            someimportant();
             async function attachmedia() {
                 const stream = await navigator.mediaDevices.getUserMedia({
                     audio: false, video: true
@@ -214,27 +213,36 @@ function Videos() {
                 for (const track of stream.getTracks()) {
                     peer.peer.addTrack(track, stream);
                 }
-                
+
 
             }
             attachmedia();
         })
 
-        socket.on("peer:negoNeeded",async({from,offer})=>{
-            const peer:peerservice=mapping.current.get(from);
-            const answer=await peer.getanswer(offer);
-            socket.emit("peer:negodone",{to:from,answer});
+        socket.on("peer:negoNeeded", async ({ from, offer }) => {
+
+            async function someimportant1(){
+                const peer: peerservice = mapping.current.get(from);
+                const answer = await peer.getanswer(offer);
+                socket.emit("peer:negodone", { to: from, answer });
+            }
+            someimportant1();
+            
         })
-        socket.on("peer:negofinal",async({from,answer})=>{
-            const peer:peerservice=mapping.current.get(from);
-            await peer.setLocalDescription(answer);
+        socket.on("peer:negofinal", async ({ from, answer }) => {
+            async function someimportant2(){
+                const peer: peerservice = mapping.current.get(from);
+                await peer.setLocalDescription(answer);
+            }
+            someimportant2();
+            
         })
 
 
         //on disconnect other users
-        socket.on("disconnectuser",(from)=>{
+        socket.on("disconnectuser", (from) => {
             const peer: peerservice = mapping.current.get(from);
-            const stream=peerstream.current.get(peer)
+            const stream = peerstream.current.get(peer)
             for (const track of stream.getTracks()) {
                 track.stop();
             }
@@ -250,30 +258,16 @@ function Videos() {
 
     return <>
         <Myvideo />
-        <Participants  streams={peerstream.current} />
+        <Participants streams={peerstream.current} />
     </>
 }
+const WrongPage = () => {
 
-function Meet() {
-    const socket = useContext(SocketContext);
-    const { code } = useParams();
-
-    const WrongPage = () => {
-        useEffect(() => {
-            socket.emit("join-meet", code);
-            socket.on("join-meet", (check) => {
-                socket.off("join-meet");
-                if (check === "found") {
-                    alert("Invalid code");
-                    return;
-                }
-            })
-        })
-        return <>
-
-        </>
-    }
-    // const [currentpage,_changepage]=useState("wrong");
+    return <>
+        <p>This link is either invalid or expired</p>
+    </>
+}
+const MeetUI=()=>{
     return <>
         <div id="meet-container">
             <div id="crowdmeet">
@@ -290,8 +284,48 @@ function Meet() {
             </div>
 
         </div>
-
     </>
+}
+function Meet() {
+    const socket = useContext(SocketContext);
+    const { code } = useParams();
+    const [checking, checkstatus] = useState(true);
+    const [valid, validity] = useState(false);
+    useEffect(() => {
+        socket.emit("join-meet", code);
+        socket.on("join-meet", (check) => {
+            
+            if (check === "found") {
+                validity(true);
+            }
+            else {
+                validity(false);
+            }
+            checkstatus(false);
+            // socket.off("join-meet");
+        })
+    },[])
+    
+    return <>
+        {(checking === true) ?
+            <ColorRing
+                visible={true}
+                height="80"
+                width="80"
+                ariaLabel="blocks-loading"
+                wrapperStyle={{}}
+                wrapperClass="blocks-wrapper"
+                colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
+            /> : <>
+                {(valid === false) ? <WrongPage /> : <MeetUI/>}
+            </>
+
+
+
+
+        }
+    </>
+
 }
 
 export default Meet;

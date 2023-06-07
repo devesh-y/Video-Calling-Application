@@ -6,18 +6,7 @@ import { useNavigate } from "react-router-dom";
 function Meet_create(){
     const socket=useContext(SocketContext);
     function joinmeeting(navigate:any){
-        socket.emit("join-meet",code);
-        socket.on("join-meet",(check)=>{
-            socket.off("join-meet");
-            if(check==="notfound"){
-                alert("Invalid code");
-                return;
-            }
-            else{
-                navigate(`/${code}`);
-                return;
-            }
-        })
+        navigate(`/${code}`);
 
     }
     function newmeeting(navigate:any){
