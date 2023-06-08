@@ -73,12 +73,14 @@ socketio.on("connection", (socket) => {
     })
 
     //offer from new users to existing users
-    socket.on("OfferNewToExist",({myoffer,to})=>{
-        socket.to(to).emit("OfferNewToExist",{offer:myoffer,from:socket.id});
-    })
+    // socket.on("OfferNewToExist",({myoffer,to})=>{
+    //     socket.to(to).emit("OfferNewToExist",{offer:myoffer,from:socket.id});
+    // })
 
     //handling negotiation
     socket.on("peer:negoNeeded",({offer,to})=>{
+        console.log("nego needed comes");
+        
         socket.to(to).emit("peer:negoNeeded",{from:socket.id,offer});
     })
 

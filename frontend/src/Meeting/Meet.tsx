@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect, memo, useRef } from "react";
+import { useContext, useState, useEffect, memo, useRef, useCallback, MutableRefObject, useSyncExternalStore } from "react";
 import { useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meet.css"
@@ -68,188 +68,184 @@ function Toolbars() {
     </>
 }
 
-const Myvideo = memo(() => {
-    const [mystream, setmystream] = useState<MediaStream>();
-    useEffect(() => {
-
-        const getmedia = async () => {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: true, video: true
+const Myvideo = () => {
+    const [stream, setstream] = useState<MediaStream>();
+    useEffect(()=>{
+        async function func(){
+            const s = await navigator.mediaDevices.getUserMedia({
+                audio: false, video: true
             });
-            setmystream(stream);
+            setstream(s);
         }
-        getmedia();
-
-    }, [mystream]);
+        func();
+        
+    },[])
     return <>
-        {mystream != undefined && <ReactPlayer playing muted url={mystream} width="130px" height="100px" />}
+        <p>user</p>
+        {stream != undefined && stream != null && <ReactPlayer playing muted url={stream} width="130px" height="100px" />}
     </>
-});
+};
 const Participants = (props: any) => {
-
+    
     const { streams} = props;
     console.log("the size of map is ",streams.size);
-
-    const marray=Array.from(streams as Map<peerservice,MediaStream>).map(([_peer, stream],index)=>{
-        return <ReactPlayer key={index} playing url={stream} width="130px" height="100px" />
-
-    });
+    
     return <>
-        {marray}
+        {Array.from(streams as Map<peerservice, MediaStream>).map(([_peer, stream], index) => {
+            return <ReactPlayer key={index} playing muted url={stream} width="130px" height="100px" />
+        })}
     </>
 }
 
 const  Videos=()=> {
     const mapping = useRef(new Map());
     const peerstream = useRef(new Map());
-    const [_peers, setpeers] = useState(0);
+    const [_peers,setpeers]=useState(0);
     const { code } = useParams();
     const socket = useContext(SocketContext);
+    const sendmedia=async ()=>{
+        const s = await navigator.mediaDevices.getUserMedia({
+            audio: false, video: true
+        });
+        const peerarray=Array.from(mapping.current);
+        for (const track of s.getTracks()) {
+            console.log("track added");
+
+            peerarray[0][1].peer.addTrack(track, s);
+        }
+    }
     useEffect(() => {
+        
         //first triggering to get offers from existing  --for new user
         socket.emit("sendoffers", code);
         console.log("triggering to get offers from existing users");
 
 
         //new user get offers from existing
-        socket.on("offerscame", ({ offer, from }) => {
+        socket.on("offerscame",async ({ offer, from }) => {
             console.log("offer coming from existing users");
             const peer = new peerservice();
-            peer.peer.addEventListener("negotiationneeded", async () => {
-                const offer = await peer.getoffer();
-                socket.emit("peer:negoNeeded", { offer, to: from });
-            })
+            
+            // peer.peer.addEventListener("negotiationneeded", async () => {
+            //     console.log("nego needed");
+            // })
 
             peer.peer.addEventListener("track", (ev) => {
                 console.log("track listerner called");
-
-                const stream = ev.streams[0];
+                const stream:MediaStream = ev.streams[0];
                 peerstream.current.set(peer, stream);
                 setpeers(peerstream.current.size);
             })
             
             mapping.current.set(from,peer);
 
-            async function answerandcreate() 
-            {
-                //answer this offer 
-                var myanswer = await peer.getanswer(offer);
+            
+            //answer this offer 
+            try{
+                const myanswer = await peer.getanswer(offer);
                 socket.emit("sendAnswer", { to: from, myanswer });
                 console.log("offer answered");
-
-                //and create your offer && send yours
-                try {
-                    var myoffer = await peer.getoffer();
-                    socket.emit("OfferNewToExist", { myoffer, to: from });
-                    console.log("offer sent to existing users ");
-
-                } catch (error) {
-                    console.log(error);
-
-                    console.log("error in sending offers ");
-
-                }
             }
-            answerandcreate();
-
+            catch(err){
+                console.log("error occured in answering the offer");
+                
+            }
         })
 
 
         // existing user send offer to new user
-        socket.on("sendoffers", (to) => {
+        socket.on("sendoffers", async (to) => {
             console.log("sending offers to new user");
-            async function createoffer() {
-                const peer = new peerservice();
-                peer.peer.addEventListener("negotiationneeded", async () => {
-                    const offer = await peer.getoffer();
-                    socket.emit("peer:negoNeeded", { offer, to });
-                })
+            
+            const peer = new peerservice();
+            
+            peer.peer.addEventListener("negotiationneeded", async () => {
+                console.log("nego needed");
+                const offer = await peer.getoffer();
+                socket.emit("peer:negoNeeded", { offer, to });
+            })
 
-                peer.peer.addEventListener("track", (ev) => {
-                    console.log("track listerner called");
-                    const stream = ev.streams[0];
-                    peerstream.current.set(peer, stream);
-                    setpeers(peerstream.current.size);
-                })
+            
 
-                mapping.current.set(to,peer);
+            mapping.current.set(to,peer);
 
-                var offer = await peer.getoffer();
+            try {
+                const offer = await peer.getoffer();
                 socket.emit("redirectoffers", { to, offer });
                 console.log("offer sent to new users");
+            } catch (error) {
+                console.log("error on sending offer");
             }
-            createoffer();
-        })
-
-        //existing user getting offer from new user
-        socket.on("OfferNewToExist", ({ offer, from }) => {
-            console.log("getting offer from new user");
-            const peer:peerservice = mapping.current.get(from);
-            async function answeroffer() {
-                var myanswer = await peer.getanswer(offer);
-                socket.emit("sendAnswer", { to: from, myanswer });
-                console.log("offer answered");
-            }
-            answeroffer();
-
-
+            
+            
         })
 
         //user getting answers
-        socket.on("sendAnswer", ({ answer, from }) => {
+        socket.on("sendAnswer",async ({ answer, from }) => {
             console.log("answers coming");
             console.log(mapping.current);
-
             const peer: peerservice = mapping.current.get(from);
-            async function someimportant(){
-                await peer.setLocalDescription(answer);
+            try{
+                await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
+                
+                
             }
-            someimportant();
-            async function attachmedia() {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: false, video: true
-                });
-
-                for (const track of stream.getTracks()) {
-                    peer.peer.addTrack(track, stream);
-                }
-
-
+            catch(error){
+                console.log(error);
+                
+                console.log("error in setting local description of answer recieved");
+                
             }
-            attachmedia();
+  
         })
 
         socket.on("peer:negoNeeded", async ({ from, offer }) => {
-
-            async function someimportant1(){
-                const peer: peerservice = mapping.current.get(from);
+            console.log("nego offer comes");
+            
+            const peer: peerservice = mapping.current.get(from);
+            try {
                 const answer = await peer.getanswer(offer);
                 socket.emit("peer:negodone", { to: from, answer });
+                console.log("nego offer answered");
+                
+            } catch (error) {
+                console.log("error in sending answer in negotiating");
+                
             }
-            someimportant1();
+            
             
         })
-        socket.on("peer:negofinal", async ({ from, answer }) => {
-            async function someimportant2(){
-                const peer: peerservice = mapping.current.get(from);
-                await peer.setLocalDescription(answer);
+        socket.on("peer:negofinal", async ({ from, answer }) => 
+        {
+            console.log("nego answer comes");
+            
+            const peer: peerservice = mapping.current.get(from);
+            try {
+                
+                await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
+                
             }
-            someimportant2();
+            catch (error) {
+                console.log(error);
+                
+                console.log("error in setting local description of answer recieved in negotiating");
+
+            }
             
         })
 
 
-        //on disconnect other users
+        // on disconnect other users
         socket.on("disconnectuser", (from) => {
             const peer: peerservice = mapping.current.get(from);
             const stream = peerstream.current.get(peer)
             for (const track of stream.getTracks()) {
-                track.stop();
+                track.stop();  
             }
             peer.peer.close();
             mapping.current.delete(from);
             peerstream.current.delete(peer);
-            setpeers(peerstream.current.size);
+            
 
         })
     }, [])
@@ -257,7 +253,8 @@ const  Videos=()=> {
 
 
     return <>
-        <Myvideo />
+    <button onClick={sendmedia}>Send Media</button>
+        <Myvideo/>
         <Participants streams={peerstream.current} />
     </>
 }
@@ -302,7 +299,7 @@ function Meet() {
                 validity(false);
             }
             checkstatus(false);
-            // socket.off("join-meet");
+            socket.off("join-meet");
         })
     },[])
     

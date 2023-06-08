@@ -2,9 +2,7 @@ export class peerservice {
 
     peer: RTCPeerConnection;
     constructor() {
-        this.peer = new RTCPeerConnection({ 
-            "iceServers": [{ "urls": 'stun:stun.l.google.com:19302' }] 
-        })
+        this.peer = new RTCPeerConnection({ 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] })
     }
     async getoffer(){
         if(this.peer){
@@ -14,14 +12,12 @@ export class peerservice {
         }
     }
     async getanswer(offer:any){
-        await this.peer.setRemoteDescription(offer);
-        const answer = await this.peer.createAnswer();
-        await this.peer.setLocalDescription(new RTCSessionDescription(answer));
-        return answer;
-    }
-    async setLocalDescription(ans:any){
         if(this.peer){
-            await this.peer.setRemoteDescription(new RTCSessionDescription(ans));
+            await this.peer.setRemoteDescription(offer);
+            const answer = await this.peer.createAnswer();
+            await this.peer.setLocalDescription(new RTCSessionDescription(answer));
+            return answer;
         }
+        
     }
 }
