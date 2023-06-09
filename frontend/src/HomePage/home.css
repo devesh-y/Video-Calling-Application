@@ -38,6 +38,14 @@
    
 
 }
+#name{
+    font-size: 1.1em;
+    padding: 10px;
+    border-radius: 10px;
+    padding-left: 10px;
+    outline: none;
+    margin-bottom: 10px;
+}
 #key-features li{
     margin: 20px 0px;
 }

@@ -42,3 +42,39 @@
     display: flex;
     justify-content: center;
 }
+.usergrid{
+    
+    width: 170px;
+    height: 160px;
+    display: flex;
+    flex-direction: column;
+}
+.userview{
+    width: 100%;
+    flex: 1 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.usertitle{
+
+    flex:0 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size:medium;
+    color: white;
+    border-radius: 5px;
+    background-color: rgb(126, 154, 238);
+    
+}
+.avatar{
+    color: black;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 50%;
+    background-color: green;
+}

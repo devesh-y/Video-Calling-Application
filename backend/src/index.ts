@@ -57,13 +57,13 @@ socketio.on("connection", (socket) => {
     })
 
     //sending offer to new user from existing
-    socket.on("redirectoffers",({to,offer})=>{
-        socket.to(to).emit("offerscame",{offer,from:socket.id});
+    socket.on("redirectoffers",({to,offer,selfname})=>{
+        socket.to(to).emit("offerscame",{offer,from:socket.id,remotename:selfname});
     })
 
     //triggering existing users to send offers to new user
-    socket.on("sendoffers",(code)=>{        
-        socket.to(code).emit("sendoffers",socket.id);
+    socket.on("sendoffers",({code,selfname})=>{        
+        socket.to(code).emit("sendoffers",{to:socket.id,remotename:selfname});
     })
     
 

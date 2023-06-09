@@ -1,34 +1,39 @@
-import { useContext, useState, useEffect, memo, useRef, useCallback, MutableRefObject, useSyncExternalStore } from "react";
-import { useParams } from "react-router-dom";
+import { useContext, useState, useEffect, useRef   } from "react";
+import { useLocation, useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meet.css"
 import { ColorRing } from "react-loader-spinner";
 import { peerservice } from "../WebRTC/p2p";
 import ReactPlayer from "react-player";
-function Toolbars() {
-    const [micstate, setmic] = useState("mic");
-    const [videostate, setvideo] = useState("videocam")
+function Toolbars(props:any) {
+    const {setcamera,setvoice}=props;
+    const [micstate, setmic] = useState("mic_off");
+    const [videostate, setvideo] = useState("videocam_off")
     const [raisehand, sethand] = useState("off");
     return <>
-        <span onClick={(e: any): void => {
+        <span style={{backgroundColor:"red"}} onClick={(e: any): void => {
             if (micstate === "mic") {
                 setmic("mic_off");
+                setvoice(false);
                 e.target.style.backgroundColor = "red";
             }
             else {
                 setmic("mic")
+                setvoice(true);
                 e.target.style.backgroundColor = "rgb(92, 87, 87)";
             }
         }} className="material-symbols-outlined toolicons">
             {micstate}
         </span>
-        <span onClick={(e: any) => {
+        <span style={{ backgroundColor: "red" }} onClick={(e: any) => {
             if (videostate === "videocam") {
                 setvideo("videocam_off");
+                setcamera(false);
                 e.target.style.backgroundColor = "red";
             }
             else {
                 setvideo("videocam")
+                setcamera(true);
                 e.target.style.backgroundColor = "rgb(92, 87, 87)";
             }
         }} className="material-symbols-outlined toolicons">
@@ -68,22 +73,72 @@ function Toolbars() {
     </>
 }
 
-const Myvideo = () => {
-    const [stream, setstream] = useState<MediaStream>();
+const Myvideo = (props:any) => {
+    const {selfname,camera,voice ,remotestream}=props;
+    const [video,setvideo]=useState<MediaStream |null>(null);
+    const [audio,setaudio]=useState<MediaStream |null>(null);
+    const sendvideo= async()=>{
+        const myvideo = await navigator.mediaDevices.getUserMedia({
+            audio: false, video: true
+        });
+        const array=Array.from(remotestream.current as Map<peerservice,Array<MediaStream|string>>);
+        array.forEach((data)=>{
+            const peer:peerservice=data[0];
+            
+            for (const track of myvideo.getTracks()) {
+                console.log("track added");
+                peer.peer.addTrack(track, myvideo);
+            }
+        })  
+    }
+    const stopsendvideo=()=>{
+        const array = Array.from(remotestream.current as Map<peerservice, Array<MediaStream | string>>);
+        array.forEach((data) => {
+            const peer: peerservice = data[0];
+            const sender=peer.peer.getSenders()[0];
+            try{
+                peer.peer.removeTrack(sender)
+            }
+            catch(err){
+                console.log(err);
+            }
+            
+        })
+    }
     useEffect(()=>{
         async function func(){
-            const s = await navigator.mediaDevices.getUserMedia({
-                audio: false, video: true
-            });
-            setstream(s);
+            if(camera===true){
+                const myvideo = await navigator.mediaDevices.getUserMedia({
+                    audio: false, video: true
+                });
+                setvideo(myvideo);
+                sendvideo();
+            }
+            if(voice===true){
+                const myaudio = await navigator.mediaDevices.getUserMedia({
+                    audio: true, video: false
+                });
+                setaudio(myaudio);
+            }
+            if(camera===false){
+                setvideo(null);
+                stopsendvideo();
+            }
+            if(voice===false){
+                setaudio(null);
+            }
         }
         func();
         
-    },[])
-    return <>
-        <p>user</p>
-        {stream != undefined && stream != null && <ReactPlayer playing muted url={stream} width="130px" height="100px" />}
-    </>
+    },[camera,voice])
+    return <div className="usergrid">
+                <div className="userview">
+                    {video === null ? <div className="avatar">{selfname[0]} </div> : <ReactPlayer playing muted url={video}  height="120px" />}
+                    {audio != null && <ReactPlayer  playing muted url={audio} width="0px" height="0px" />}
+                </div>
+                <div className="usertitle" >{selfname}</div>
+            </div>
+        
 };
 const Participants = (props: any) => {
     
@@ -91,118 +146,112 @@ const Participants = (props: any) => {
     console.log("the size of map is ",streams.size);
     
     return <>
-        {Array.from(streams as Map<peerservice, MediaStream>).map(([_peer, stream], index) => {
-            return <ReactPlayer key={index} playing muted url={stream} width="130px" height="100px" />
+        {Array.from(streams as Map<peerservice, Array<string|MediaStream>>).map(([_peer, data], index) => {
+            return <div key={index} className="usergrid"> 
+                <div className="userview">
+                    {data[0] === null ? <div className="avatar">{(data[2] as string)[0]} </div> : <ReactPlayer playing muted url={data[0]} height="120px" />}
+                    {data[1] != null && <ReactPlayer playing muted url={data[1]} width="0px" height="0px" />}
+                </div>
+                <div className="usertitle" >{data[2] as string}</div>
+            </div>
+             
         })}
     </>
 }
 
-const  Videos=()=> {
-    const mapping = useRef(new Map());
-    const peerstream = useRef(new Map());
-    const [_peers,setpeers]=useState(0);
+const Videos=(props:any)=> {
+    const {mapping, remotestream,selfname,camera,voice}=props;
+    const [_peers,setpeers]=useState<number>(0);
     const { code } = useParams();
     const socket = useContext(SocketContext);
-    const sendmedia=async ()=>{
-        const s = await navigator.mediaDevices.getUserMedia({
-            audio: false, video: true
-        });
-        const peerarray=Array.from(mapping.current);
-        for (const track of s.getTracks()) {
-            console.log("track added");
-
-            peerarray[0][1].peer.addTrack(track, s);
-        }
-    }
+   
     useEffect(() => {
-        
         //first triggering to get offers from existing  --for new user
-        socket.emit("sendoffers", code);
+        socket.emit("sendoffers", { code, selfname });
         console.log("triggering to get offers from existing users");
 
 
         //new user get offers from existing
-        socket.on("offerscame",async ({ offer, from }) => {
+        socket.on("offerscame", async ({ offer, from,remotename }) => {
             console.log("offer coming from existing users");
             const peer = new peerservice();
-            
-            // peer.peer.addEventListener("negotiationneeded", async () => {
-            //     console.log("nego needed");
-            // })
-
-            peer.peer.addEventListener("track", (ev) => {
-                console.log("track listerner called");
-                const stream:MediaStream = ev.streams[0];
-                peerstream.current.set(peer, stream);
-                setpeers(peerstream.current.size);
+            remotestream.current.set(peer, [null, null, remotename])
+            setpeers(remotestream.current.size);
+            peer.peer.addEventListener("negotiationneeded", async () => {
+                console.log("nego needed");
+                const offer = await peer.getoffer();
+                socket.emit("peer:negoNeeded", { offer, to:from });
             })
-            
-            mapping.current.set(from,peer);
 
-            
+            // peer.peer.addEventListener("track", (ev) => {
+            //     console.log("track listerner called");
+            //     // const remotestream: MediaStream = ev.streams[0];
+            //     // remotestream.current.set(peer, [remotestream,remotename]);
+            //     // setpeers(remotestream.current.size);
+            // })
+            mapping.current.set(from, [peer,remotename]);
             //answer this offer 
-            try{
+            try {
                 const myanswer = await peer.getanswer(offer);
                 socket.emit("sendAnswer", { to: from, myanswer });
                 console.log("offer answered");
-            }
-            catch(err){
-                console.log("error occured in answering the offer");
                 
             }
-        })
+            catch (err) {
+                console.log("error occured in answering the offer");
 
+            }
+        });
 
         // existing user send offer to new user
-        socket.on("sendoffers", async (to) => {
+        socket.on("sendoffers", async ({to,remotename}) => {
             console.log("sending offers to new user");
-            
+
             const peer = new peerservice();
-            
+            remotestream.current.set(peer, [null, null, remotename])
+            setpeers(remotestream.current.size);
             peer.peer.addEventListener("negotiationneeded", async () => {
                 console.log("nego needed");
                 const offer = await peer.getoffer();
                 socket.emit("peer:negoNeeded", { offer, to });
             })
-
+            // peer.peer.addEventListener("track", (ev) => {
+            //     console.log("track listerner called");
+            //     // const remotestream: MediaStream = ev.streams[0];
+            //     // remotestream.current.set(peer, [remotestream, remotename]);
+            //     // setpeers(remotestream.current.size);
+            // })
+            mapping.current.set(to, [peer,remotename]);
             
-
-            mapping.current.set(to,peer);
-
             try {
                 const offer = await peer.getoffer();
-                socket.emit("redirectoffers", { to, offer });
+                socket.emit("redirectoffers", { to, offer,selfname });
                 console.log("offer sent to new users");
             } catch (error) {
                 console.log("error on sending offer");
             }
-            
-            
-        })
 
-        //user getting answers
-        socket.on("sendAnswer",async ({ answer, from }) => {
+
+        });
+        //getting answers
+        socket.on("sendAnswer", async ({ answer, from }) => {
             console.log("answers coming");
             console.log(mapping.current);
-            const peer: peerservice = mapping.current.get(from);
-            try{
+            const peer: peerservice = mapping.current.get(from)[0];
+            try {
                 await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
                 
                 
             }
-            catch(error){
+            catch (error) {
                 console.log(error);
-                
                 console.log("error in setting local description of answer recieved");
-                
             }
-  
         })
 
         socket.on("peer:negoNeeded", async ({ from, offer }) => {
             console.log("nego offer comes");
-            
-            const peer: peerservice = mapping.current.get(from);
+            const peer: peerservice = mapping.current.get(from)[0];
             try {
                 const answer = await peer.getanswer(offer);
                 socket.emit("peer:negodone", { to: from, answer });
@@ -210,52 +259,28 @@ const  Videos=()=> {
                 
             } catch (error) {
                 console.log("error in sending answer in negotiating");
-                
-            }
-            
-            
+            } 
         })
         socket.on("peer:negofinal", async ({ from, answer }) => 
         {
             console.log("nego answer comes");
-            
-            const peer: peerservice = mapping.current.get(from);
+            const peer: peerservice = mapping.current.get(from)[0];
             try {
-                
                 await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
-                
             }
             catch (error) {
                 console.log(error);
-                
                 console.log("error in setting local description of answer recieved in negotiating");
-
             }
-            
         })
 
-
-        // on disconnect other users
-        socket.on("disconnectuser", (from) => {
-            const peer: peerservice = mapping.current.get(from);
-            const stream = peerstream.current.get(peer)
-            for (const track of stream.getTracks()) {
-                track.stop();  
-            }
-            peer.peer.close();
-            mapping.current.delete(from);
-            peerstream.current.delete(peer);
-            
-
-        })
     }, [])
 
 
 
     return <>
-    <button onClick={sendmedia}>Send Media</button>
-        <Myvideo/>
-        <Participants streams={peerstream.current} />
+        <Myvideo selfname={selfname} camera={camera} voice={voice} remotestream={remotestream} />
+        <Participants streams={remotestream.current} />    
     </>
 }
 const WrongPage = () => {
@@ -264,12 +289,18 @@ const WrongPage = () => {
         <p>This link is either invalid or expired</p>
     </>
 }
-const MeetUI=()=>{
+const MeetUI=(props:any)=>{
+    const  {selfname}=props;
+    const [camera,setcamera]=useState(false);
+    const [voice,setvoice]=useState(false);
+    const mapping = useRef(new Map());
+    const remotestream = useRef(new Map());
+    
     return <>
         <div id="meet-container">
             <div id="crowdmeet">
                 <div id="videos">
-                    <Videos />
+                    <Videos selfname={selfname} mapping={mapping} remotestream={remotestream} camera={camera} voice={voice} />
                 </div>
                 <div id="sidepanel">
 
@@ -277,16 +308,18 @@ const MeetUI=()=>{
             </div>
 
             <div id="toolbar">
-                <Toolbars />
+                <Toolbars setcamera={setcamera} setvoice={setvoice} />
             </div>
 
         </div>
     </>
 }
 function Meet() {
+    const location = useLocation();
+    const [selfname, setselfname] = useState("")
     const socket = useContext(SocketContext);
     const { code } = useParams();
-    const [checking, checkstatus] = useState(true);
+    const [checking, checkstatus] = useState(false);
     const [valid, validity] = useState(false);
     useEffect(() => {
         socket.emit("join-meet", code);
@@ -294,6 +327,7 @@ function Meet() {
             
             if (check === "found") {
                 validity(true);
+                setselfname(location.state.selfname);
             }
             else {
                 validity(false);
@@ -314,7 +348,7 @@ function Meet() {
                 wrapperClass="blocks-wrapper"
                 colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
             /> : <>
-                {(valid === false) ? <WrongPage /> : <MeetUI/>}
+                {(valid === false) ? <WrongPage /> : <MeetUI selfname={selfname} />}
             </>
 
 
