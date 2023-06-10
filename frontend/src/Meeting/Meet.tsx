@@ -491,7 +491,7 @@ function Meet() {
     const [selfname, setselfname] = useState("")
     const socket = useContext(SocketContext);
     const { code } = useParams();
-    const [checking, checkstatus] = useState(false);
+    const [checking, checkstatus] = useState(true);
     const [valid, validity] = useState(false);
     useEffect(() => {
         socket.emit("join-meet", code);
