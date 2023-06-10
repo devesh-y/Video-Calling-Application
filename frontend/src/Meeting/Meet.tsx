@@ -205,8 +205,8 @@ const Myvideo = memo((props:any) => {
     },[camera,voice])
     return <div className="usergrid">
                 <div className="userview">
-                    {video === null ? <div className="avatar">{selfname[0]} </div> : <ReactPlayer playing muted url={video}  height="120px" />}
-                    {audio != null && <ReactPlayer  playing  url={audio} width="0px" height="0px" />}
+                    {video === null ? <div className="avatar">{selfname[0]} </div> : <ReactPlayer playing={true} muted={true} url={video}  height="120px" />}
+                    {audio != null && <ReactPlayer muted={true} playing={true}  url={audio} width="0px" height="0px" />}
                 </div>
                 <div className="usertitle" >{selfname}</div>
             </div>
@@ -221,8 +221,8 @@ const Participants = (props: any) => {
         {Array.from(streams as Map<peerservice, Array<string|MediaStream>>).map(([_peer, data], index) => {
             return <div key={index} className="usergrid"> 
                 <div className="userview">
-                    {data[0] === null ? <div className="avatar">{(data[2] as string)[0]} </div> : <ReactPlayer playing muted url={data[0]} height="120px" />}
-                    {data[1] != null && <ReactPlayer playing url={data[1]} width="0px" height="0px" />}
+                    {data[0] === null ? <div className="avatar">{(data[2] as string)[0]} </div> : <ReactPlayer playing={true} muted={true} url={data[0]} height="120px" />}
+                    {data[1] != null && <ReactPlayer playing={true} muted={false} url={data[1]} width="0px" height="0px" />}
                 </div>
                 <div className="usertitle" >{data[2] as string}</div>
             </div>

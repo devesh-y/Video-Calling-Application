@@ -8,7 +8,9 @@ const app=express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-
+setInterval(()=>{
+    console.log("server is running");
+},60000)
 const httpserver=http.createServer(app);
 
 const socketio = new Server(httpserver,{
@@ -75,8 +77,6 @@ socketio.on("connection", (socket) => {
 
     //handling negotiation
     socket.on("peer:negoNeeded",({offer,to})=>{
-        console.log("nego needed comes");
-        
         socket.to(to).emit("peer:negoNeeded",{from:socket.id,offer});
     })
 
