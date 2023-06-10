@@ -1,16 +1,12 @@
 import "./home.css"
-import { useContext, useEffect, useState} from "react"
+import { useContext, useState} from "react"
 import { SocketContext } from "../Socket/SocketClient";
 import { useNavigate } from "react-router-dom";
 
 function Meet_create(){
     const [name,setname]=useState("");
     const socket=useContext(SocketContext);
-    useEffect(() => {
-        socket.on("error", (error) => {
-            console.log('Connection error:', error);
-        })
-    }, [])
+    
     function joinmeeting(navigate:any){
         if(name===""){
             alert("Enter name");
