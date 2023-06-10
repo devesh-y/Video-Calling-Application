@@ -253,11 +253,15 @@ const Videos=(props:any)=> {
             peer.peer.addEventListener("track", (ev) => {
                 if(ev.track.kind==="video"){
                     console.log("video track comes");
-                    remotestream.current.get(peer)[0] = ev.streams[0];  
+                    let videostream=new MediaStream();
+                    videostream.addTrack(ev.track);
+                    remotestream.current.get(peer)[0] = videostream;  
                 }
                 else if(ev.track.kind==="audio"){
                     console.log("audio track comes");
-                    remotestream.current.get(peer)[1] = ev.streams[0];  
+                    let audiostream=new MediaStream();
+                    audiostream.addTrack(ev.track);
+                    remotestream.current.get(peer)[1] = audiostream;  
                 }
                 let x:number= Math.floor(Math.random()*1000);
                 if(x===peers){
@@ -296,11 +300,15 @@ const Videos=(props:any)=> {
             peer.peer.addEventListener("track", (ev) => {
                 if (ev.track.kind === "video") {
                     console.log("video track comes");
-                    remotestream.current.get(peer)[0] = ev.streams[0];
+                    let videostream = new MediaStream();
+                    videostream.addTrack(ev.track);
+                    remotestream.current.get(peer)[0] = videostream; 
                 }
                 else if (ev.track.kind === "audio") {
                     console.log("audio track comes");
-                    remotestream.current.get(peer)[1] = ev.streams[0];
+                    let audiostream = new MediaStream();
+                    audiostream.addTrack(ev.track);
+                    remotestream.current.get(peer)[1] = audiostream; 
                 }
                 let x: number = Math.floor(Math.random() * 1000);
                 if (x === peers) {
