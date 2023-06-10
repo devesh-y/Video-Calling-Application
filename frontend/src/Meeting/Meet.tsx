@@ -397,7 +397,12 @@ const Videos=(props:any)=> {
             try {
                 await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
                 console.log("the state of camera is ", camera);
-
+            }
+            catch (error) {
+                console.log(error);
+                console.log("error in setting local description of answer recieved");
+            }
+            try {
                 if (camera === true) {
                     let stream = await navigator.mediaDevices.getUserMedia({
                         audio: false, video: true
@@ -406,7 +411,7 @@ const Videos=(props:any)=> {
                     console.log("track added");
                     peer.peer.addTrack(videotrack, stream);
 
-                    
+
                     stream = await navigator.mediaDevices.getUserMedia({
                         audio: false, video: true
                     });
@@ -414,7 +419,7 @@ const Videos=(props:any)=> {
                     console.log("track added");
                     peer.peer.addTrack(videotrack, stream);
                 }
-                if(voice===true){
+                if (voice === true) {
                     let stream = await navigator.mediaDevices.getUserMedia({
                         audio: true, video: false
                     });
@@ -430,11 +435,11 @@ const Videos=(props:any)=> {
                     console.log("track added");
                     peer.peer.addTrack(audiotrack, stream);
                 }
-
-            }
-            catch (error) {
+            } catch (error) {
                 console.log(error);
-                console.log("error in setting local description of answer recieved");
+                console.log("error in sending media when user joined in existing meet");
+                
+                
             }
             
         })

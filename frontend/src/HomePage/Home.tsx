@@ -23,12 +23,12 @@ function Meet_create(){
             alert("Enter name");
             return;
         }
+        if (socket.connected === false) {
+            alert("Try after few seconds. (max - 30s)")
+            return;
+        }
         socket.emit("create-room");
         socket.on("create-room",(code)=>{
-            if (socket.connected === false) {
-                alert("Try after few seconds. (max - 30s)")
-                return;
-            }
             navigate(`/${code}`, { state: { selfname: name } });
             return;
         })
