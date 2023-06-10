@@ -87,6 +87,9 @@ socketio.on("connection", (socket) => {
     socket.on("stopvideo",(code)=>{
         socket.to(code).emit("stopvideo",socket.id);
     })
+    socket.on("stopaudio",(code)=>{
+        socket.to(code).emit("stopaudio",socket.id);
+    })
     socket.on("disconnect",()=>{
         console.log("socket disconnected");
         socket.to(socketroom).emit("disconnectuser",socket.id);

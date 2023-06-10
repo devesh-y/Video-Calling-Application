@@ -80,37 +80,38 @@ const Myvideo = memo((props:any) => {
     const [video,setvideo]=useState<MediaStream |null>(null);
     const [audio,setaudio]=useState<MediaStream |null>(null);
     const sendvideo= useCallback( async()=>{
-        let myvideo = await navigator.mediaDevices.getUserMedia({
+        let stream = await navigator.mediaDevices.getUserMedia({
             audio: false, video: true
         });
         const array=Array.from(remotestream.current as Map<peerservice,Array<MediaStream|string>>);
         array.forEach((data)=>{
             const peer:peerservice=data[0];
+            let videotrack=stream.getVideoTracks()[0];
+            console.log("track added");
+            peer.peer.addTrack(videotrack, stream);
             
-            for (const track of myvideo.getTracks()) {
-                console.log("track added");
-                peer.peer.addTrack(track, myvideo);
-            }
         })  
-        myvideo = await navigator.mediaDevices.getUserMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
             audio: false, video: true
         });
         array.forEach((data)=>{
-            const peer:peerservice=data[0];
-            
-            for (const track of myvideo.getTracks()) {
-                console.log("track added");
-                peer.peer.addTrack(track, myvideo);
-            }
+            const peer: peerservice = data[0];
+            let videotrack = stream.getVideoTracks()[0];
+            console.log("track added");
+            peer.peer.addTrack(videotrack, stream);
         })  
     },[camera])
     const stopsendvideo=useCallback( ()=>{
         const array = Array.from(remotestream.current as Map<peerservice, Array<MediaStream | string>>);
         array.forEach((data) => {
             const peer: peerservice = data[0];
-            const sender=peer.peer.getSenders()[0];
+            const videosender= peer.peer.getSenders().find((sender)=>{
+                return sender.track && sender.track.kind === "video";
+            });
+            
             try{
-                peer.peer.removeTrack(sender)
+                console.log("sender found");
+                peer.peer.removeTrack(videosender as RTCRtpSender)
             }
             catch(err){
                 console.log(err);
@@ -120,37 +121,38 @@ const Myvideo = memo((props:any) => {
         
     },[camera])
     const sendaudio=useCallback( async ()=>{
-        let myaudio = await navigator.mediaDevices.getUserMedia({
+        let stream = await navigator.mediaDevices.getUserMedia({
             audio: true, video: false
         });
         const array = Array.from(remotestream.current as Map<peerservice, Array<MediaStream | string>>);
         array.forEach((data) => {
             const peer: peerservice = data[0];
+            let audiotrack = stream.getAudioTracks()[0];
+            console.log("track added");
+            peer.peer.addTrack(audiotrack, stream);
 
-            for (const track of myaudio.getTracks()) {
-                console.log("track added");
-                peer.peer.addTrack(track, myaudio);
-            }
         })
-        myaudio = await navigator.mediaDevices.getUserMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
             audio: true, video: false
         });
         array.forEach((data) => {
             const peer: peerservice = data[0];
-
-            for (const track of myaudio.getTracks()) {
-                console.log("track added");
-                peer.peer.addTrack(track, myaudio);
-            }
+            let audiotrack = stream.getAudioTracks()[0];
+            console.log("track added");
+            peer.peer.addTrack(audiotrack, stream);
         })  
     },[voice])
     const stopsendaudio = useCallback(() => {
         const array = Array.from(remotestream.current as Map<peerservice, Array<MediaStream | string>>);
         array.forEach((data) => {
             const peer: peerservice = data[0];
-            const sender = peer.peer.getSenders()[0];
+            const audiosender = peer.peer.getSenders().find((sender) => {
+                return sender.track && sender.track.kind === "audio";
+            });
+
             try {
-                peer.peer.removeTrack(sender)
+                console.log("sender found");
+                peer.peer.removeTrack(audiosender as RTCRtpSender)
             }
             catch (err) {
                 console.log(err);
@@ -162,31 +164,40 @@ const Myvideo = memo((props:any) => {
     useEffect(()=>{
         async function func(){
             if(camera===true){
-                const myvideo = await navigator.mediaDevices.getUserMedia({
-                    audio: false, video: true
-                });
-                setvideo(myvideo);
-                sendvideo();
-            }
-            if(voice===true){
-                const myaudio = await navigator.mediaDevices.getUserMedia({
-                    audio: true, video: false
-                });
-                setaudio(myaudio);
-                sendaudio();
-            }
-            if(camera===false){
-                setvideo(null);
-                stopsendvideo();
-                if(video!=null){
-                    socket.emit("stopvideo",code);
+                if(video===null){
+                    const myvideo = await navigator.mediaDevices.getUserMedia({
+                        audio: false, video: true
+                    });
+                    setvideo(myvideo);
+                    sendvideo();
                 }
                 
             }
-            if(voice===false){
-                setaudio(null);
-                stopsendaudio();
+            if (camera === false) {
+                if (video != null) {
+                    setvideo(null);
+                    stopsendvideo();
+                    socket.emit("stopvideo", code);
+                }
+
+            }
+            if(voice===true){
+                if(audio===null){
+                    const myaudio = await navigator.mediaDevices.getUserMedia({
+                        audio: true, video: false
+                    });
+                    setaudio(myaudio);
+                    sendaudio();
+                }
                 
+            }
+            
+            if(voice===false){
+                if(audio!=null){
+                    setaudio(null);
+                    stopsendaudio();
+                    socket.emit("stopaudio",code);
+                }
             }
         }
         func();
@@ -195,7 +206,7 @@ const Myvideo = memo((props:any) => {
     return <div className="usergrid">
                 <div className="userview">
                     {video === null ? <div className="avatar">{selfname[0]} </div> : <ReactPlayer playing muted url={video}  height="120px" />}
-                    {audio != null && <ReactPlayer  playing muted url={audio} width="0px" height="0px" />}
+                    {audio != null && <ReactPlayer  playing  url={audio} width="0px" height="0px" />}
                 </div>
                 <div className="usertitle" >{selfname}</div>
             </div>
@@ -211,7 +222,7 @@ const Participants = (props: any) => {
             return <div key={index} className="usergrid"> 
                 <div className="userview">
                     {data[0] === null ? <div className="avatar">{(data[2] as string)[0]} </div> : <ReactPlayer playing muted url={data[0]} height="120px" />}
-                    {data[1] != null && <ReactPlayer playing muted url={data[1]} width="0px" height="0px" />}
+                    {data[1] != null && <ReactPlayer playing url={data[1]} width="0px" height="0px" />}
                 </div>
                 <div className="usertitle" >{data[2] as string}</div>
             </div>
@@ -245,10 +256,13 @@ const Videos=(props:any)=> {
             })
 
             peer.peer.addEventListener("track", (ev) => {
-                console.log("track listerner called");
                 if(ev.track.kind==="video"){
                     console.log("video track comes");
-                    remotestream.current.get(peer)[0]=ev.streams[0];
+                    remotestream.current.get(peer)[0] = ev.streams[0];  
+                }
+                else if(ev.track.kind==="audio"){
+                    console.log("audio track comes");
+                    remotestream.current.get(peer)[1] = ev.streams[0];  
                 }
                 let x:number= Math.floor(Math.random()*1000);
                 if(x===peers){
@@ -285,10 +299,13 @@ const Videos=(props:any)=> {
                 socket.emit("peer:negoNeeded", { offer, to });
             })
             peer.peer.addEventListener("track", (ev) => {
-                console.log("track listerner called");
                 if (ev.track.kind === "video") {
                     console.log("video track comes");
                     remotestream.current.get(peer)[0] = ev.streams[0];
+                }
+                else if (ev.track.kind === "audio") {
+                    console.log("audio track comes");
+                    remotestream.current.get(peer)[1] = ev.streams[0];
                 }
                 let x: number = Math.floor(Math.random() * 1000);
                 if (x === peers) {
@@ -310,6 +327,15 @@ const Videos=(props:any)=> {
         socket.on("stopvideo",(from)=>{
             const peer:peerservice=mapping.current.get(from)[0];
             remotestream.current.get(peer)[0]=null;
+            let x: number = Math.floor(Math.random() * 1000);
+            if (x === peers) {
+                x = Math.floor(Math.random() * 1000);
+            }
+            setpeers(x);
+        })
+        socket.on("stopaudio",(from)=>{
+            const peer: peerservice = mapping.current.get(from)[0];
+            remotestream.current.get(peer)[1] = null;
             let x: number = Math.floor(Math.random() * 1000);
             if (x === peers) {
                 x = Math.floor(Math.random() * 1000);
@@ -356,20 +382,36 @@ const Videos=(props:any)=> {
                 console.log("the state of camera is ", camera);
 
                 if (camera === true) {
-                    let myvideo = await navigator.mediaDevices.getUserMedia({
+                    let stream = await navigator.mediaDevices.getUserMedia({
                         audio: false, video: true
                     });
-                    for (const track of myvideo.getTracks()) {
-                        console.log("track added");
-                        peer.peer.addTrack(track, myvideo);
-                    }
-                    myvideo = await navigator.mediaDevices.getUserMedia({
+                    let videotrack = stream.getVideoTracks()[0];
+                    console.log("track added");
+                    peer.peer.addTrack(videotrack, stream);
+
+                    
+                    stream = await navigator.mediaDevices.getUserMedia({
                         audio: false, video: true
                     });
-                    for (const track of myvideo.getTracks()) {
-                        console.log("track added");
-                        peer.peer.addTrack(track, myvideo);
-                    }
+                    videotrack = stream.getVideoTracks()[0];
+                    console.log("track added");
+                    peer.peer.addTrack(videotrack, stream);
+                }
+                if(voice===true){
+                    let stream = await navigator.mediaDevices.getUserMedia({
+                        audio: true, video: false
+                    });
+                    let audiotrack = stream.getAudioTracks()[0];
+                    console.log("track added");
+                    peer.peer.addTrack(audiotrack, stream);
+
+
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        audio: false, video: true
+                    });
+                    audiotrack = stream.getAudioTracks()[0];
+                    console.log("track added");
+                    peer.peer.addTrack(audiotrack, stream);
                 }
 
             }
