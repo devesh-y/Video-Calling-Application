@@ -91,6 +91,9 @@ socketio.on("connection", (socket) => {
     socket.on("stopaudio",(code)=>{
         socket.to(code).emit("stopaudio",socket.id);
     })
+    socket.on("disconnectuser",(code)=>{
+        socket.to(code).emit("disconnectuser", socket.id);
+    })
     socket.on("disconnect",()=>{
         console.log("socket disconnected");
         socket.to(socketroom).emit("disconnectuser",socket.id);

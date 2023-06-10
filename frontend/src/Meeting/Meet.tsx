@@ -497,6 +497,13 @@ function Meet() {
     const [checking, checkstatus] = useState(true);
     const [valid, validity] = useState(false);
     useEffect(() => {
+        window.addEventListener('popstate',()=>{
+            socket.emit("disconnectuser",code);
+        })
+        socket.on("error", (error) => {
+            console.log('Connection error:', error);
+        })
+       
         socket.emit("join-meet", code);
         socket.on("join-meet", (check) => {
             
