@@ -72,10 +72,6 @@ socketio.on("connection", (socket) => {
         socket.to(to).emit("sendAnswer",{answer:myanswer,from:socket.id});
     })
 
-    //offer from new users to existing users
-    // socket.on("OfferNewToExist",({myoffer,to})=>{
-    //     socket.to(to).emit("OfferNewToExist",{offer:myoffer,from:socket.id});
-    // })
 
     //handling negotiation
     socket.on("peer:negoNeeded",({offer,to})=>{
@@ -88,7 +84,9 @@ socketio.on("connection", (socket) => {
         socket.to(to).emit("peer:negofinal",{from:socket.id,answer})
     })
 
-
+    socket.on("stopvideo",(code)=>{
+        socket.to(code).emit("stopvideo",socket.id);
+    })
     socket.on("disconnect",()=>{
         console.log("socket disconnected");
         socket.to(socketroom).emit("disconnectuser",socket.id);

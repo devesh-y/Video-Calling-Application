@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect, useRef   } from "react";
+import { useContext, useState, useEffect, useRef  ,memo } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meet.css"
@@ -73,15 +73,28 @@ function Toolbars(props:any) {
     </>
 }
 
-const Myvideo = (props:any) => {
+const Myvideo = memo((props:any) => {
+    const {code}=useParams();
+    const socket=useContext(SocketContext);
     const {selfname,camera,voice ,remotestream}=props;
     const [video,setvideo]=useState<MediaStream |null>(null);
     const [audio,setaudio]=useState<MediaStream |null>(null);
     const sendvideo= async()=>{
-        const myvideo = await navigator.mediaDevices.getUserMedia({
+        let myvideo = await navigator.mediaDevices.getUserMedia({
             audio: false, video: true
         });
         const array=Array.from(remotestream.current as Map<peerservice,Array<MediaStream|string>>);
+        array.forEach((data)=>{
+            const peer:peerservice=data[0];
+            
+            for (const track of myvideo.getTracks()) {
+                console.log("track added");
+                peer.peer.addTrack(track, myvideo);
+            }
+        })  
+        myvideo = await navigator.mediaDevices.getUserMedia({
+            audio: false, video: true
+        });
         array.forEach((data)=>{
             const peer:peerservice=data[0];
             
@@ -104,6 +117,7 @@ const Myvideo = (props:any) => {
             }
             
         })
+        
     }
     useEffect(()=>{
         async function func(){
@@ -123,6 +137,10 @@ const Myvideo = (props:any) => {
             if(camera===false){
                 setvideo(null);
                 stopsendvideo();
+                if(video!=null){
+                    socket.emit("stopvideo",code);
+                }
+                
             }
             if(voice===false){
                 setaudio(null);
@@ -139,7 +157,7 @@ const Myvideo = (props:any) => {
                 <div className="usertitle" >{selfname}</div>
             </div>
         
-};
+});
 const Participants = (props: any) => {
     
     const { streams} = props;
@@ -161,7 +179,7 @@ const Participants = (props: any) => {
 
 const Videos=(props:any)=> {
     const {mapping, remotestream,selfname,camera,voice}=props;
-    const [_peers,setpeers]=useState<number>(0);
+    const [peers,setpeers]=useState<number>(0);
     const { code } = useParams();
     const socket = useContext(SocketContext);
    
@@ -183,13 +201,20 @@ const Videos=(props:any)=> {
                 socket.emit("peer:negoNeeded", { offer, to:from });
             })
 
-            // peer.peer.addEventListener("track", (ev) => {
-            //     console.log("track listerner called");
-            //     // const remotestream: MediaStream = ev.streams[0];
-            //     // remotestream.current.set(peer, [remotestream,remotename]);
-            //     // setpeers(remotestream.current.size);
-            // })
+            peer.peer.addEventListener("track", (ev) => {
+                console.log("track listerner called");
+                if(ev.track.kind==="video"){
+                    console.log("video track comes");
+                    remotestream.current.get(peer)[0]=ev.streams[0];
+                }
+                let x:number= Math.floor(Math.random()*1000);
+                if(x===peers){
+                    x = Math.floor(Math.random() * 1000);
+                }
+                setpeers(x);
+            })
             mapping.current.set(from, [peer,remotename]);
+
             //answer this offer 
             try {
                 const myanswer = await peer.getanswer(offer);
@@ -201,6 +226,7 @@ const Videos=(props:any)=> {
                 console.log("error occured in answering the offer");
 
             }
+
         });
 
         // existing user send offer to new user
@@ -215,12 +241,18 @@ const Videos=(props:any)=> {
                 const offer = await peer.getoffer();
                 socket.emit("peer:negoNeeded", { offer, to });
             })
-            // peer.peer.addEventListener("track", (ev) => {
-            //     console.log("track listerner called");
-            //     // const remotestream: MediaStream = ev.streams[0];
-            //     // remotestream.current.set(peer, [remotestream, remotename]);
-            //     // setpeers(remotestream.current.size);
-            // })
+            peer.peer.addEventListener("track", (ev) => {
+                console.log("track listerner called");
+                if (ev.track.kind === "video") {
+                    console.log("video track comes");
+                    remotestream.current.get(peer)[0] = ev.streams[0];
+                }
+                let x: number = Math.floor(Math.random() * 1000);
+                if (x === peers) {
+                    x = Math.floor(Math.random() * 1000);
+                }
+                setpeers(x);
+            })
             mapping.current.set(to, [peer,remotename]);
             
             try {
@@ -231,23 +263,17 @@ const Videos=(props:any)=> {
                 console.log("error on sending offer");
             }
 
-
         });
-        //getting answers
-        socket.on("sendAnswer", async ({ answer, from }) => {
-            console.log("answers coming");
-            console.log(mapping.current);
-            const peer: peerservice = mapping.current.get(from)[0];
-            try {
-                await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
-                
-                
+        socket.on("stopvideo",(from)=>{
+            const peer:peerservice=mapping.current.get(from)[0];
+            remotestream.current.get(peer)[0]=null;
+            let x: number = Math.floor(Math.random() * 1000);
+            if (x === peers) {
+                x = Math.floor(Math.random() * 1000);
             }
-            catch (error) {
-                console.log(error);
-                console.log("error in setting local description of answer recieved");
-            }
+            setpeers(x);
         })
+       
 
         socket.on("peer:negoNeeded", async ({ from, offer }) => {
             console.log("nego offer comes");
@@ -275,6 +301,45 @@ const Videos=(props:any)=> {
         })
 
     }, [])
+    useEffect(()=>{
+
+        //getting answers
+        socket.on("sendAnswer", async ({ answer, from }) => {
+            console.log("answers coming");
+            console.log(mapping.current);
+            const peer: peerservice = mapping.current.get(from)[0];
+            try {
+                await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
+                console.log("the state of camera is ", camera);
+
+                if (camera === true) {
+                    let myvideo = await navigator.mediaDevices.getUserMedia({
+                        audio: false, video: true
+                    });
+                    for (const track of myvideo.getTracks()) {
+                        console.log("track added");
+                        peer.peer.addTrack(track, myvideo);
+                    }
+                    myvideo = await navigator.mediaDevices.getUserMedia({
+                        audio: false, video: true
+                    });
+                    for (const track of myvideo.getTracks()) {
+                        console.log("track added");
+                        peer.peer.addTrack(track, myvideo);
+                    }
+                }
+
+            }
+            catch (error) {
+                console.log(error);
+                console.log("error in setting local description of answer recieved");
+            }
+            
+        })
+        return () => {
+            socket.off("sendAnswer")
+        }
+    },[camera,voice])
 
 
 
@@ -294,7 +359,7 @@ const MeetUI=(props:any)=>{
     const [camera,setcamera]=useState(false);
     const [voice,setvoice]=useState(false);
     const mapping = useRef(new Map());
-    const remotestream = useRef(new Map());
+    const remotestream = useRef<Map<peerservice,Array<MediaStream|string>>>(new Map());
     
     return <>
         <div id="meet-container">

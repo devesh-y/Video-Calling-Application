@@ -21,9 +21,7 @@ function Meet_create(){
         }
         socket.emit("create-room");
         socket.on("create-room",(code)=>{
-            // const expired_time=new Date();
-            // expired_time.setTime(expired_time.getTime() + 24 * 60 * 60 * 1000); 
-            // document.cookie=`${code}=host;expires=${expired_time.toLocaleString()}`;
+    
             navigate(`/${code}`, { state: { selfname: name } });
             return;
         })
