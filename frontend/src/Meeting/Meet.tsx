@@ -78,7 +78,7 @@ const Myvideo = memo((props:any) => {
     const socket=useContext(SocketContext);
     const {selfname,camera,voice ,remotestream}=props;
     const [video,setvideo]=useState<MediaStream |null>(null);
-    const [audio,setaudio]=useState<MediaStream |null>(null);
+    const [audiostate,setaudiostate]=useState(false);
     const sendvideo= useCallback( async()=>{
         let stream = await navigator.mediaDevices.getUserMedia({
             audio: false, video: true
@@ -182,19 +182,15 @@ const Myvideo = memo((props:any) => {
 
             }
             if(voice===true){
-                if(audio===null){
-                    const myaudio = await navigator.mediaDevices.getUserMedia({
-                        audio: true, video: false
-                    });
-                    setaudio(myaudio);
+                if(audiostate===false){
+                    setaudiostate(true);
                     sendaudio();
                 }
-                
             }
             
             if(voice===false){
-                if(audio!=null){
-                    setaudio(null);
+                if(audiostate===true){
+                    setaudiostate(false);
                     stopsendaudio();
                     socket.emit("stopaudio",code);
                 }
@@ -206,7 +202,6 @@ const Myvideo = memo((props:any) => {
     return <div className="usergrid">
                 <div className="userview">
                     {video === null ? <div className="avatar">{selfname[0]} </div> : <ReactPlayer playing={true} muted={true} url={video}  height="120px" />}
-                    {audio != null && <ReactPlayer muted={true} playing={true}  url={audio} width="0px" height="0px" />}
                 </div>
                 <div className="usertitle" >{selfname}</div>
             </div>
@@ -222,7 +217,7 @@ const Participants = (props: any) => {
             return <div key={index} className="usergrid"> 
                 <div className="userview">
                     {data[0] === null ? <div className="avatar">{(data[2] as string)[0]} </div> : <ReactPlayer playing={true} muted={true} url={data[0]} height="120px" />}
-                    {data[1] != null && <ReactPlayer playing={true} muted={false} url={data[1]} width="0px" height="0px" />}
+                    {data[1] != null && <ReactPlayer  playing={true} muted={false} url={data[1]} width="0px" height="0px" />}
                 </div>
                 <div className="usertitle" >{data[2] as string}</div>
             </div>
