@@ -368,6 +368,23 @@ const Videos=(props:any)=> {
                 console.log("error in setting local description of answer recieved in negotiating");
             }
         })
+        socket.on("disconnectuser",(from)=>{
+            const peer:peerservice=mapping.current.get(from)[0];
+            peer.peer.close();
+            remotestream.current.delete(peer);
+            let x: number = Math.floor(Math.random() * 1000);
+            if (x === peers) {
+                x = Math.floor(Math.random() * 1000);
+            }
+            mapping.current.forEach((value:any,key:any) => {
+                if(value[0]===peer){
+                    mapping.current.delete(key);
+                    return;
+                }
+            });
+            setpeers(x);
+
+        })
 
     }, [])
     useEffect(()=>{
