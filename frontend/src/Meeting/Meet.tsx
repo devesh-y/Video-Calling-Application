@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect, useRef  ,memo } from "react";
+import { useContext, useState, useEffect, useRef  ,memo, useCallback } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meet.css"
@@ -79,7 +79,7 @@ const Myvideo = memo((props:any) => {
     const {selfname,camera,voice ,remotestream}=props;
     const [video,setvideo]=useState<MediaStream |null>(null);
     const [audio,setaudio]=useState<MediaStream |null>(null);
-    const sendvideo= async()=>{
+    const sendvideo= useCallback( async()=>{
         let myvideo = await navigator.mediaDevices.getUserMedia({
             audio: false, video: true
         });
@@ -103,8 +103,8 @@ const Myvideo = memo((props:any) => {
                 peer.peer.addTrack(track, myvideo);
             }
         })  
-    }
-    const stopsendvideo=()=>{
+    },[camera])
+    const stopsendvideo=useCallback( ()=>{
         const array = Array.from(remotestream.current as Map<peerservice, Array<MediaStream | string>>);
         array.forEach((data) => {
             const peer: peerservice = data[0];
@@ -118,7 +118,47 @@ const Myvideo = memo((props:any) => {
             
         })
         
-    }
+    },[camera])
+    const sendaudio=useCallback( async ()=>{
+        let myaudio = await navigator.mediaDevices.getUserMedia({
+            audio: true, video: false
+        });
+        const array = Array.from(remotestream.current as Map<peerservice, Array<MediaStream | string>>);
+        array.forEach((data) => {
+            const peer: peerservice = data[0];
+
+            for (const track of myaudio.getTracks()) {
+                console.log("track added");
+                peer.peer.addTrack(track, myaudio);
+            }
+        })
+        myaudio = await navigator.mediaDevices.getUserMedia({
+            audio: true, video: false
+        });
+        array.forEach((data) => {
+            const peer: peerservice = data[0];
+
+            for (const track of myaudio.getTracks()) {
+                console.log("track added");
+                peer.peer.addTrack(track, myaudio);
+            }
+        })  
+    },[voice])
+    const stopsendaudio = useCallback(() => {
+        const array = Array.from(remotestream.current as Map<peerservice, Array<MediaStream | string>>);
+        array.forEach((data) => {
+            const peer: peerservice = data[0];
+            const sender = peer.peer.getSenders()[0];
+            try {
+                peer.peer.removeTrack(sender)
+            }
+            catch (err) {
+                console.log(err);
+            }
+
+        })
+
+    }, [voice])
     useEffect(()=>{
         async function func(){
             if(camera===true){
@@ -133,6 +173,7 @@ const Myvideo = memo((props:any) => {
                     audio: true, video: false
                 });
                 setaudio(myaudio);
+                sendaudio();
             }
             if(camera===false){
                 setvideo(null);
@@ -144,6 +185,8 @@ const Myvideo = memo((props:any) => {
             }
             if(voice===false){
                 setaudio(null);
+                stopsendaudio();
+                
             }
         }
         func();
