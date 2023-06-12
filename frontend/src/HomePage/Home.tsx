@@ -9,7 +9,7 @@ function Meet_create(){
     const navigate = useNavigate();
     const location=useLocation();
     const [code, setcode] = useState("");
-    function joinmeeting(navigate:any){
+    function joinmeeting(){
         if(name===""){
             alert("Enter name");
             return;
@@ -19,10 +19,10 @@ function Meet_create(){
             return;
         }
         
-        navigate(`/${code}`,{state:{selfname:name}});
+        navigate(`/${code}/ask`,{state:{selfname:name}});
 
     }
-    function newmeeting(navigate:any){
+    function newmeeting(){
         if (name === "") {
             alert("Enter name");
             return;
@@ -37,7 +37,7 @@ function Meet_create(){
             d.setTime(d.getTime() + (24 * 60 * 60 * 1000));
             let expires = "expires=" + d.toUTCString();
             document.cookie = code + "=" + "host" + ";" + expires + ";path=/";
-            navigate(`/${code}`, { state: { selfname: name } });
+            navigate(`/${code}/ask`, { state: { selfname: name } });
             return;
         })
     }
@@ -49,9 +49,9 @@ function Meet_create(){
     return <>
         <input id="name" type="text" placeholder="Enter your name" value={name} onChange={(e) => setname(e.target.value)} />
         <div id="meet-creation">
-            <button onClick={()=>newmeeting(navigate)}>New meeting</button>
+            <button onClick={newmeeting}>New meeting</button>
             <input type="text" value={code} placeholder="Enter an existing code" onChange={(e)=>setcode(e.target.value)}></input>
-            {code != "" ? <p onClick={()=>joinmeeting(navigate)} >Join</p>:<></>}
+            {code != "" ? <p onClick={joinmeeting} >Join</p>:<></>}
         </div>
         
     </>

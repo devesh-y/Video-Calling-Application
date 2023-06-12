@@ -19,11 +19,10 @@ const socketio = new Server(httpserver,{
         // https://crowdconnect.netlify.app
     }
 });
-const roomhost=new Map();
+const socketroom=new Map();
 socketio.on("connection", (socket) => {
     console.log(`connected to client of id ${socket.id}`);
     console.log(`Total connected sockets: ${socketio.sockets.sockets.size}`);
-    var socketroom:any;
     socket.on("create-room",()=>{
         const es = crypto.randomBytes(128).toString('base64').slice(0,20);
         var code:string="";
@@ -39,9 +38,7 @@ socketio.on("connection", (socket) => {
             }
         }
         code=code.slice(0,-1);
-        roomhost.set(code,socket.id);
         socket.emit("create-room",code);
-        socketroom = code;
         console.log("room created");
         
     });
@@ -54,16 +51,8 @@ socketio.on("connection", (socket) => {
         }
     })
     socket.on("join-meet",(code)=>{
-        if(socketio.sockets.adapter.rooms.has(code)){
-            socket.join(code);
-            socketroom=code;
-            socket.emit("join-meet","found"); 
-            console.log("meet joined");
-            
-        }
-        else{
-            socket.emit("join-meet","notfound");
-        }
+        socket.join(code);
+        socketroom.set(socket.id,code);
     })
 
     //sending offer to new user from existing
@@ -103,10 +92,8 @@ socketio.on("connection", (socket) => {
     })
     socket.on("disconnect",()=>{
         console.log("socket disconnected");
-        socket.to(socketroom).emit("disconnectuser",socket.id);
-        roomhost.delete(socketroom);
-        console.log(roomhost);
-        
+        socket.to(socketroom.get(socket.id)).emit("disconnectuser",socket.id);
+        socketroom.delete(socket.id)
     })
 });
 

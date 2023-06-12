@@ -471,6 +471,13 @@ const MeetUI=(props:any)=>{
     const remotestream = useRef<Map<peerservice,Array<MediaStream|string>>>(new Map());
     
     return <div id="meet-container">
+        <div id="permitpanel">
+            <div className="permit-user">
+                <p>name</p>
+                <button>Accept</button>
+                <button>Reject</button>
+            </div>
+        </div>
                 <div id="crowdmeet">
                     <div id="videos">
                         <Videos selfname={selfname} mapping={mapping} remotestream={remotestream} camera={camera} voice={voice} />
@@ -478,7 +485,7 @@ const MeetUI=(props:any)=>{
                     <div id="sidepanel">
 
                     </div>
-                </div>
+                d</div>
                 <div id="toolbar">
                     <Toolbars setcamera={setcamera} setvoice={setvoice} />
                 </div>
@@ -513,9 +520,13 @@ function Meet() {
     useEffect(() => {
         socket.on("join-meet", (check) => {
             if(selfname===""){
+                console.log("this runs");
+                
                 navigate("/",{state:{code}});
             }
             else if (check != "found"){
+                console.log("chekc is not found");
+                
                 validity(false);
                 checkstatus(false);
             }
@@ -528,6 +539,7 @@ function Meet() {
             }
             else if (getCookieValue(code as string) ===null)
             {
+                console.log("this runs");
                 navigate(`/${code}/ask`,{state:{selfname}})
             }
             else {

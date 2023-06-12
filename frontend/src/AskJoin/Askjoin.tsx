@@ -15,12 +15,25 @@ const Askjoin=()=>{
     const location=useLocation();
     const [checking,setchecking]=useState(true);
     const [valid,setvalid]=useState(false);
+    function getCookieValue(cookieName: string): string | null {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.indexOf(cookieName + '=') === 0) {
+                return cookie.substring(cookieName.length + 1);
+            }
+        }
+        return null;
+    }
     useEffect(()=>{
-        if(location.state && location.state.selfname!=""){
+        if(!(location.state) || location.state.selfname!=""){
+            console.log("navigating to home page");
             navigate(`/`,{state:{code}});
             return;
         }
-        socket.emit("check-meet",code);
+        if (getCookieValue(code as string)==="host"){
+            navigate(`/${code}`,{state:{permission:true}});
+        }
     },[])
     useEffect(()=>{
         socket.on("check-meet",(chk)=>{
