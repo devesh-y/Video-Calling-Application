@@ -5,6 +5,7 @@ import "./meet.css"
 import { ColorRing } from "react-loader-spinner";
 import { peerservice } from "../WebRTC/p2p";
 import ReactPlayer from "react-player";
+
 function Toolbars(props:any) {
     const {setcamera,setvoice}=props;
     const [micstate, setmic] = useState("mic_off");
@@ -457,12 +458,6 @@ const Videos=(props:any)=> {
         <Participants streams={remotestream.current} />    
     </>
 }
-const WrongPage = () => {
-
-    return <>
-        <p>This link is either invalid or expired</p>
-    </>
-}
 const MeetUI=(props:any)=>{
     const  {selfname}=props;
     const [camera,setcamera]=useState(false);
@@ -498,9 +493,7 @@ function Meet() {
     const socket = useContext(SocketContext);
     const { code } = useParams();
     const [selfname, setselfname] = useState("")
-    const [host,sethost]=useState(false);
-    const [checking, checkstatus] = useState(true);
-    const [valid, validity] = useState(false);
+    const [loading, setloading] = useState(true);
     function getCookieValue(cookieName:string):string|null {
         var cookies = document.cookie.split(';');
         for (var i = 0; i < cookies.length; i++) {
@@ -512,50 +505,24 @@ function Meet() {
         return null;
     }
     useEffect(()=>{
-        if (location.state && location.state.selfname != undefined) {
-            setselfname(location.state.selfname);
-        }
-        socket.emit("join-meet", code);
-    },[])
-    useEffect(() => {
-        socket.on("join-meet", (check) => {
-            if(selfname===""){
-                console.log("this runs");
-                
-                navigate("/",{state:{code}});
-            }
-            else if (check != "found"){
-                console.log("chekc is not found");
-                
-                validity(false);
-                checkstatus(false);
-            }
-            else if (getCookieValue(code as string)==="host")
-            {
-                console.log("a host");
-                validity(true);
-                checkstatus(false);
-                sethost(true);
-            }
-            else if (getCookieValue(code as string) ===null)
-            {
-                console.log("this runs");
-                navigate(`/${code}/ask`,{state:{selfname}})
-            }
-            else {
-                console.log("a participant");
-                validity(true);
-                checkstatus(false);
-                sethost(false);
-            }
+        socket.on("join-meet", () => {
+            setloading(false);
         })
         return ()=>{
-            socket.off("join-meet")
+            socket.off("join-meet");
         }
-    },[selfname,checking,valid])
-    
-    return <>
-        {(checking === true) ?
+    },[loading])
+    useEffect(()=>{
+        if (location.state == undefined || location.state == null || location.state.permission!=true)
+        {
+            navigate(`/`, { state: { code } });
+        }
+        else{
+            setselfname(location.state.selfname);
+            socket.emit("join-meet", { code, type: getCookieValue(code as string) })
+        }
+    },[])
+    return (loading === true) ?
             <ColorRing
                 visible={true}
                 height="80"
@@ -564,16 +531,7 @@ function Meet() {
                 wrapperStyle={{}}
                 wrapperClass="blocks-wrapper"
                 colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
-            /> : <>
-                {(valid === false) ? <WrongPage /> : <MeetUI host={host} selfname={selfname} />}
-            </>
-
-
-
-
-        }
-    </>
-
+            /> :  <MeetUI selfname={selfname} />
 }
 
 export default Meet;

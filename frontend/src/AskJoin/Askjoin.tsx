@@ -26,13 +26,16 @@ const Askjoin=()=>{
         return null;
     }
     useEffect(()=>{
-        if(!(location.state) || location.state.selfname!=""){
+        if(location.state==undefined || location.state==null || location.state.selfname==""){
             console.log("navigating to home page");
             navigate(`/`,{state:{code}});
             return;
         }
-        if (getCookieValue(code as string)==="host"){
-            navigate(`/${code}`,{state:{permission:true}});
+        else if (getCookieValue(code as string) === "host" || getCookieValue(code as string) === "participant" ){
+            navigate(`/${code}`,{state:{permission:true, selfname:location.state.selfname}});
+        }
+        else{
+            socket.emit("check-meet",code);
         }
     },[])
     useEffect(()=>{
@@ -45,27 +48,31 @@ const Askjoin=()=>{
             }
             setchecking(false);
         })
-    }, [checking])
-    return (checking === true)?     <ColorRing
-                                    visible={true}
-                                    height="80"
-                                    width="80"
-                                    ariaLabel="blocks-loading"
-                                    wrapperStyle={{}}
-                                    wrapperClass="blocks-wrapper"
-                                    colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}/>
-                                    : (valid=== true) ?
-                                                    <div id="askcontainer">
-                                                        <div id="askbox">
-                                                            <div id="askjoinlogo">
-                                                                CrowdConnect
-                                                            </div>
-                                                            <p>Crowd Code : {code}</p>
-                                                            <button id="joinbtn">Ask to join</button>
-                                                            <div id="askjoinloading"></div>
-                                                        </div>
-                                                    </div>
-                                    : <WrongPage/> 
+        return ()=>{
+            socket.off("check-meet");
+        }
+    }, [checking,valid])
+    return (checking === true)?     
+    <ColorRing
+        visible={true}
+        height="80"
+        width="80"
+        ariaLabel="blocks-loading"
+        wrapperStyle={{}}
+        wrapperClass="blocks-wrapper"
+        colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}/>
+        : (valid=== true) ?
+                        <div id="askcontainer">
+                            <div id="askbox">
+                                <div id="askjoinlogo">
+                                    CrowdConnect
+                                </div>
+                                <p>Crowd Code : {code}</p>
+                                <button id="joinbtn">Ask to join</button>
+                                <div id="askjoinloading"></div>
+                            </div>
+                        </div>
+        : <WrongPage/> 
                                     
             
 }

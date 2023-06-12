@@ -38,8 +38,12 @@ function Meet_create(){
             let expires = "expires=" + d.toUTCString();
             document.cookie = code + "=" + "host" + ";" + expires + ";path=/";
             navigate(`/${code}/ask`, { state: { selfname: name } });
-            return;
+            
         })
+
+        return ()=>{
+            socket.off("create-room");
+        }
     }
     useEffect(()=>{
         if(location.state && location.state.code!=undefined){

@@ -20,6 +20,7 @@ const socketio = new Server(httpserver,{
     }
 });
 const socketroom=new Map();
+const roomhost=new Map();
 socketio.on("connection", (socket) => {
     console.log(`connected to client of id ${socket.id}`);
     console.log(`Total connected sockets: ${socketio.sockets.sockets.size}`);
@@ -50,9 +51,13 @@ socketio.on("connection", (socket) => {
             socket.emit("check-meet", false);
         }
     })
-    socket.on("join-meet",(code)=>{
+    socket.on("join-meet",({code,type})=>{
         socket.join(code);
         socketroom.set(socket.id,code);
+        if(type==="host"){
+            roomhost.set(code,socket.id);
+        }
+        socket.emit("join-meet");
     })
 
     //sending offer to new user from existing
@@ -94,6 +99,12 @@ socketio.on("connection", (socket) => {
         console.log("socket disconnected");
         socket.to(socketroom.get(socket.id)).emit("disconnectuser",socket.id);
         socketroom.delete(socket.id)
+        let temproom=socketroom.get(socket.id);
+        if(roomhost.get(temproom)===socket.id)
+        {
+            roomhost.delete(temproom);
+        }
+        
     })
 });
 
