@@ -8,18 +8,18 @@ const app=express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-setInterval(()=>{
-    console.log("server is running");
-},60000)
+// setInterval(()=>{
+//     console.log("server is running");
+// },60000)
 const httpserver=http.createServer(app);
 
 const socketio = new Server(httpserver,{
     cors: {
-        origin: "https://crowdconnect.netlify.app"
+        origin: "*"
         // https://crowdconnect.netlify.app
     }
 });
-
+const roomhost=new Map();
 socketio.on("connection", (socket) => {
     console.log(`connected to client of id ${socket.id}`);
     console.log(`Total connected sockets: ${socketio.sockets.sockets.size}`);
@@ -39,13 +39,20 @@ socketio.on("connection", (socket) => {
             }
         }
         code=code.slice(0,-1);
-        socket.join(code);
+        roomhost.set(code,socket.id);
         socket.emit("create-room",code);
         socketroom = code;
         console.log("room created");
         
     });
-
+    socket.on("check-meet",(code)=>{
+        if (socketio.sockets.adapter.rooms.has(code)) {
+            socket.emit("check-meet", true);
+        }
+        else {
+            socket.emit("check-meet", false);
+        }
+    })
     socket.on("join-meet",(code)=>{
         if(socketio.sockets.adapter.rooms.has(code)){
             socket.join(code);
@@ -97,6 +104,8 @@ socketio.on("connection", (socket) => {
     socket.on("disconnect",()=>{
         console.log("socket disconnected");
         socket.to(socketroom).emit("disconnectuser",socket.id);
+        roomhost.delete(socketroom);
+        console.log(roomhost);
         
     })
 });

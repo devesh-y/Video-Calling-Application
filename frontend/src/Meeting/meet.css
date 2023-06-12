@@ -1,6 +1,4 @@
-#root{
-    height: 100vh;
-}
+
 .material-symbols-outlined {
     font-variation-settings:
         'FILL' 0,
@@ -10,10 +8,11 @@
 }
 
 #meet-container{
+    height: 100vh;
     display: flex;
     background-color: rgb(28, 32, 32);
     flex-direction: column;
-    height: 100%;
+    
 }
 #crowdmeet{
     flex: 1 1 100%;
@@ -29,7 +28,7 @@
 #toolbar {
     cursor: default;
     color: white;
-    flex: 1 1 80px;
+    flex: 1 0 70px;
     display: flex;
     justify-content: center;
     gap: 20px;

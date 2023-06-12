@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect, useRef  ,memo, useCallback } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meet.css"
 import { ColorRing } from "react-loader-spinner";
@@ -269,7 +269,7 @@ const Videos=(props:any)=> {
                 }
                 setpeers(x);
             })
-            mapping.current.set(from, [peer,remotename]);
+            mapping.current.set(from, peer);
 
             //answer this offer 
             try {
@@ -316,7 +316,7 @@ const Videos=(props:any)=> {
                 }
                 setpeers(x);
             })
-            mapping.current.set(to, [peer,remotename]);
+            mapping.current.set(to,peer);
             
             try {
                 const offer = await peer.getoffer();
@@ -328,7 +328,7 @@ const Videos=(props:any)=> {
 
         });
         socket.on("stopvideo",(from)=>{
-            const peer:peerservice=mapping.current.get(from)[0];
+            const peer:peerservice=mapping.current.get(from);
             remotestream.current.get(peer)[0]=null;
             let x: number = Math.floor(Math.random() * 1000);
             if (x === peers) {
@@ -337,7 +337,7 @@ const Videos=(props:any)=> {
             setpeers(x);
         })
         socket.on("stopaudio",(from)=>{
-            const peer: peerservice = mapping.current.get(from)[0];
+            const peer: peerservice = mapping.current.get(from);
             remotestream.current.get(peer)[1] = null;
             let x: number = Math.floor(Math.random() * 1000);
             if (x === peers) {
@@ -349,7 +349,7 @@ const Videos=(props:any)=> {
 
         socket.on("peer:negoNeeded", async ({ from, offer }) => {
             console.log("nego offer comes");
-            const peer: peerservice = mapping.current.get(from)[0];
+            const peer: peerservice = mapping.current.get(from);
             try {
                 const answer = await peer.getanswer(offer);
                 socket.emit("peer:negodone", { to: from, answer });
@@ -362,7 +362,7 @@ const Videos=(props:any)=> {
         socket.on("peer:negofinal", async ({ from, answer }) => 
         {
             console.log("nego answer comes");
-            const peer: peerservice = mapping.current.get(from)[0];
+            const peer: peerservice = mapping.current.get(from);
             try {
                 await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
             }
@@ -372,20 +372,19 @@ const Videos=(props:any)=> {
             }
         })
         socket.on("disconnectuser",(from)=>{
-            const peer:peerservice=mapping.current.get(from)[0];
-            peer.peer.close();
-            remotestream.current.delete(peer);
-            let x: number = Math.floor(Math.random() * 1000);
-            if (x === peers) {
-                x = Math.floor(Math.random() * 1000);
-            }
-            mapping.current.forEach((value:any,key:any) => {
-                if(value[0]===peer){
-                    mapping.current.delete(key);
-                    return;
+            if (mapping.current.get(from))
+            {
+                const peer: peerservice = mapping.current.get(from);
+                peer.peer.close();
+                remotestream.current.delete(peer);
+                let x: number = Math.floor(Math.random() * 1000);
+                if (x === peers) {
+                    x = Math.floor(Math.random() * 1000);
                 }
-            });
-            setpeers(x);
+                mapping.current.delete(from);
+                setpeers(x);
+            }
+            
 
         })
 
@@ -396,7 +395,7 @@ const Videos=(props:any)=> {
         socket.on("sendAnswer", async ({ answer, from }) => {
             console.log("answers coming");
             console.log(mapping.current);
-            const peer: peerservice = mapping.current.get(from)[0];
+            const peer: peerservice = mapping.current.get(from);
             try {
                 await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
                 console.log("the state of camera is ", camera);
@@ -471,47 +470,77 @@ const MeetUI=(props:any)=>{
     const mapping = useRef(new Map());
     const remotestream = useRef<Map<peerservice,Array<MediaStream|string>>>(new Map());
     
-    return <>
-        <div id="meet-container">
-            <div id="crowdmeet">
-                <div id="videos">
-                    <Videos selfname={selfname} mapping={mapping} remotestream={remotestream} camera={camera} voice={voice} />
+    return <div id="meet-container">
+                <div id="crowdmeet">
+                    <div id="videos">
+                        <Videos selfname={selfname} mapping={mapping} remotestream={remotestream} camera={camera} voice={voice} />
+                    </div>
+                    <div id="sidepanel">
+
+                    </div>
                 </div>
-                <div id="sidepanel">
-
+                <div id="toolbar">
+                    <Toolbars setcamera={setcamera} setvoice={setvoice} />
                 </div>
-            </div>
 
-            <div id="toolbar">
-                <Toolbars setcamera={setcamera} setvoice={setvoice} />
             </div>
-
-        </div>
-    </>
 }
 function Meet() {
     const location = useLocation();
-    const [selfname, setselfname] = useState("")
+    const navigate =useNavigate();
     const socket = useContext(SocketContext);
     const { code } = useParams();
+    const [selfname, setselfname] = useState("")
+    const [host,sethost]=useState(false);
     const [checking, checkstatus] = useState(true);
     const [valid, validity] = useState(false);
-    useEffect(() => {
-       
+    function getCookieValue(cookieName:string):string|null {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.indexOf(cookieName + '=') === 0) {
+                return cookie.substring(cookieName.length + 1);
+            }
+        }
+        return null;
+    }
+    useEffect(()=>{
+        if (location.state && location.state.selfname != undefined) {
+            setselfname(location.state.selfname);
+        }
         socket.emit("join-meet", code);
+    },[])
+    useEffect(() => {
         socket.on("join-meet", (check) => {
-            
-            if (check === "found") {
+            if(selfname===""){
+                navigate("/",{state:{code}});
+            }
+            else if (check != "found"){
+                validity(false);
+                checkstatus(false);
+            }
+            else if (getCookieValue(code as string)==="host")
+            {
+                console.log("a host");
                 validity(true);
-                setselfname(location.state.selfname);
+                checkstatus(false);
+                sethost(true);
+            }
+            else if (getCookieValue(code as string) ===null)
+            {
+                navigate(`/${code}/ask`,{state:{selfname}})
             }
             else {
-                validity(false);
+                console.log("a participant");
+                validity(true);
+                checkstatus(false);
+                sethost(false);
             }
-            checkstatus(false);
-            socket.off("join-meet");
         })
-    },[])
+        return ()=>{
+            socket.off("join-meet")
+        }
+    },[selfname,checking,valid])
     
     return <>
         {(checking === true) ?
@@ -524,7 +553,7 @@ function Meet() {
                 wrapperClass="blocks-wrapper"
                 colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
             /> : <>
-                {(valid === false) ? <WrongPage /> : <MeetUI selfname={selfname} />}
+                {(valid === false) ? <WrongPage /> : <MeetUI host={host} selfname={selfname} />}
             </>
 
 
