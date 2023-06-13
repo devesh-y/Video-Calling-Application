@@ -15,7 +15,7 @@ const httpserver=http.createServer(app);
 
 const socketio = new Server(httpserver,{
     cors: {
-        origin: "*"
+        origin: "https://crowdconnect.netlify.app"
         // https://crowdconnect.netlify.app
     }
 });

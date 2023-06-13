@@ -227,7 +227,7 @@ const Participants = (props: any) => {
     </>
 }
 
-const Videos=(props:any)=> {
+const Videos=memo((props:any)=> {
     const {mapping, remotestream,selfname,camera,voice}=props;
     const [peers,setpeers]=useState<number>(0);
     const { code } = useParams();
@@ -457,7 +457,7 @@ const Videos=(props:any)=> {
         <Myvideo selfname={selfname} camera={camera} voice={voice} remotestream={remotestream} />
         <Participants streams={remotestream.current} />    
     </>
-}
+})
 const MeetUI=(props:any)=>{
     const  {selfname}=props;
     const [camera,setcamera]=useState(false);
