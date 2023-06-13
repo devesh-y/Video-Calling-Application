@@ -1,3 +1,4 @@
 # Redirects from what the browser requests to what we serve
-/:code                https://crowdconnect.netlify.app/:code
-/:code/ask            https://crowdconnect.netlify.app/:code/ask
+/                     https://crowdconnect.netlify.app
+/:code                https://crowdconnect.netlify.app/code
+/:code/ask            https://crowdconnect.netlify.app/code/ask
