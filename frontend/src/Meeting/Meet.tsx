@@ -461,18 +461,48 @@ const Videos=(props:any)=> {
 const MeetUI=(props:any)=>{
     const  {selfname}=props;
     const [camera,setcamera]=useState(false);
+    const [askers,setaskers]=useState(new Map());
     const [voice,setvoice]=useState(false);
     const mapping = useRef(new Map());
+    const socket=useContext(SocketContext);
     const remotestream = useRef<Map<peerservice,Array<MediaStream|string>>>(new Map());
-    
+    useEffect(()=>{
+        socket.on("askhost",({name,to})=>{
+            console.log("request reached");
+            let temp=new Map(askers);
+            temp.set(to,name);
+            setaskers(temp);
+        })
+        return ()=>{
+            socket.off("askhost")
+        }
+    },[askers])
+    const sendacknowledge=(e:any,key:any)=>{
+        let answer=e.target.innerText;
+        if(answer==="Accept"){
+            answer=true;
+        }
+        else{
+            answer=false;
+        }
+        socket.emit("hostdecision",{answer,to:key})
+        let temp = new Map(askers);
+        temp.delete(key);
+        setaskers(temp);
+    }
     return <div id="meet-container">
+        {  askers.size>=1 && 
         <div id="permitpanel">
-            <div className="permit-user">
-                <p>name</p>
-                <button>Accept</button>
-                <button>Reject</button>
+                    {Array.from(askers).map(([key,value])=>
+                    {
+                        return <div key={key} className="permit-user">
+                                <p>{value}</p>
+                                <button onClick={(e)=>sendacknowledge(e,key)}>Accept</button>
+                                <button onClick={(e)=>sendacknowledge(e,key)}>Reject</button>
+                            </div>
+                    })}
             </div>
-        </div>
+        }
                 <div id="crowdmeet">
                     <div id="videos">
                         <Videos selfname={selfname} mapping={mapping} remotestream={remotestream} camera={camera} voice={voice} />
@@ -480,12 +510,12 @@ const MeetUI=(props:any)=>{
                     <div id="sidepanel">
 
                     </div>
-                d</div>
+                </div>
                 <div id="toolbar">
                     <Toolbars setcamera={setcamera} setvoice={setvoice} />
                 </div>
 
-            </div>
+        </div>
 }
 function Meet() {
     const location = useLocation();

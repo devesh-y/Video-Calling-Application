@@ -92,18 +92,28 @@ socketio.on("connection", (socket) => {
     socket.on("stopaudio",(code)=>{
         socket.to(code).emit("stopaudio",socket.id);
     })
+    socket.on("askhost",({code,name})=>{
+        let temphost=roomhost.get(code);
+        socket.to(temphost).emit("askhost",{name,to:socket.id});
+    })
+    socket.on("hostdecision",({answer,to})=>{
+        socket.to(to).emit("hostdecision",answer);
+    })
     socket.on("disconnectuser",(code)=>{
         socket.to(code).emit("disconnectuser", socket.id);
     })
     socket.on("disconnect",()=>{
         console.log("socket disconnected");
-        socket.to(socketroom.get(socket.id)).emit("disconnectuser",socket.id);
-        socketroom.delete(socket.id)
-        let temproom=socketroom.get(socket.id);
-        if(roomhost.get(temproom)===socket.id)
-        {
-            roomhost.delete(temproom);
+        if(socketroom.get(socket.id)){
+            socket.to(socketroom.get(socket.id)).emit("disconnectuser", socket.id);
+            socketroom.delete(socket.id)
+            let temproom = socketroom.get(socket.id);
+            if (roomhost.get(temproom) === socket.id) {
+                roomhost.delete(temproom);
+            }
         }
+        
+        
         
     })
 });
