@@ -10,8 +10,11 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         <BrowserRouter>
             <Routes>
                 <Route path='/' element={<Home />} />
-                <Route path='/:code' element={<Meet />} />
-                <Route path='/:code/ask' element={<Askjoin/>} />
+                <Route path='/:code'>
+                    <Route path='' element={<Meet />} />
+                    <Route path='ask' element={<Askjoin />} />
+                </Route>
+                
             </Routes>
         </BrowserRouter>
     </SocketProvider>
