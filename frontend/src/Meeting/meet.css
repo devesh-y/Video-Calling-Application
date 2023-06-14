@@ -5,7 +5,12 @@
         'GRAD' 0,
         'opsz' 48
 }
-
+#vfloader{
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 #meet-container{
     height: 100vh;
     display: flex;

@@ -553,15 +553,18 @@ function Meet() {
         }
     },[])
     return (loading === true) ?
-            <ColorRing
-                visible={true}
-                height="80"
-                width="80"
-                ariaLabel="blocks-loading"
-                wrapperStyle={{}}
-                wrapperClass="blocks-wrapper"
-                colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
-            /> :  <MeetUI selfname={selfname} />
+                <div id="vfloader">
+                        <ColorRing
+                            visible={true}
+                            height="80"
+                            width="80"
+                            ariaLabel="blocks-loading"
+                            wrapperStyle={{}}
+                            wrapperClass="blocks-wrapper"
+                            colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
+                        />
+                </div>
+             :  <MeetUI selfname={selfname} />
 }
 
 export default Meet;
