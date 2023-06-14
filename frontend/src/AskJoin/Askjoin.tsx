@@ -44,6 +44,8 @@ const Askjoin=()=>{
             }
             else{
                 setaskloader(false);
+                alert("Host denied your request");
+
             }
         })
     },[])
