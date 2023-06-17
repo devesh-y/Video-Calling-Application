@@ -522,6 +522,11 @@ const MeetUI = (props: any) => {
     const mapping = useRef(new Map());
     const socket = useContext(SocketContext);
     const remotestream = useRef<Map<peerservice, Array<MediaStream | string>>>(new Map());
+    // useEffect(()=>{
+    //     window.addEventListener('beforeunload', ()=>{
+    //         window.history.replaceState({}, '', '/end'); 
+    //     });
+    // },[])
     useEffect(() => {
         socket.on("askhost", ({ name, to }) => {
             console.log("request reached");
