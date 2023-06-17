@@ -1,9 +1,9 @@
 import { useContext, useState, useEffect, Suspense, lazy} from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
-import "./meet.css"
+import "./meetAuth.css"
 import { ColorRing } from "react-loader-spinner";
-const MeetUI=lazy(()=>import("../MeetUI/MeetUI"))
+const MeetUI=lazy(()=>import("./MeetUI"))
 function Meet() {
     const location = useLocation();
     const navigate =useNavigate();
@@ -41,25 +41,11 @@ function Meet() {
     },[])
     return (loading === true) ?
                 <div className="vfloader">
-                        <ColorRing
-                            visible={true}
-                            height="80"
-                            width="80"
-                            ariaLabel="blocks-loading"
-                            wrapperStyle={{}}
-                            wrapperClass="blocks-wrapper"
-                            colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
+                        <ColorRing visible={true}  height="80" width="80" ariaLabel="blocks-loading" wrapperStyle={{}}  wrapperClass="blocks-wrapper" colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
                         />
                 </div>
         : <Suspense fallback={<div className="vfloader">
-                                <ColorRing
-                                    visible={true}
-                                    height="80"
-                                    width="80"
-                                    ariaLabel="blocks-loading"
-                                    wrapperStyle={{}}
-                                    wrapperClass="blocks-wrapper"
-                                    colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
+                                <ColorRing  visible={true}  height="80" width="80" ariaLabel="blocks-loading"  wrapperStyle={{}} wrapperClass="blocks-wrapper" colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
                                 />
                             </div>}>  
                             <MeetUI selfname={selfname} /></Suspense>  

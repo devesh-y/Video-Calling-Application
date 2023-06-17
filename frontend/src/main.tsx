@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import Meet from './Meeting/Meet.tsx'
+import Meet from './Meeting/MeetAuth.tsx'
 import Askjoin from './AskJoin/Askjoin.tsx'
 import Home from './HomePage/Home.tsx'
 import SocketProvider from './Socket/SocketClient.tsx';

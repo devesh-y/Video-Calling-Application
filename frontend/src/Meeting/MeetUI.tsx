@@ -1,74 +1,120 @@
-import { useContext, useState, useEffect, useRef, memo, useCallback } from "react";
+import { useContext, useState, useEffect, useRef, memo, useCallback} from "react";
 import { useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meetUI.css"
 import { peerservice } from "../WebRTC/p2p";
 import ReactPlayer from "react-player";
+import { IconContext } from "react-icons";
+import { BsMic, BsMicMute, BsThreeDotsVertical, BsPeople, BsChatLeftText } from "react-icons/bs";
+import {BiVideoOff,BiVideo} from "react-icons/bi";
+import {TbScreenShare,TbScreenShareOff} from "react-icons/tb";
+import {FaRegHandPaper} from "react-icons/fa";
+import { MdCallEnd, MdOutlineAdminPanelSettings } from "react-icons/md";
+
+import "./toolbar.css"
 function Toolbars(props: any) {
     const { setcamera, setvoice } = props;
-    const [micstate, setmic] = useState("mic_off");
-    const [videostate, setvideo] = useState("videocam_off")
+    const [micstate, setmic] = useState("off");
+    const [videostate, setvideo] = useState("off")
     const [raisehand, sethand] = useState("off");
+    const [screenshare,setscreenshare]=useState("off");
     return <>
-        <span style={{ backgroundColor: "red" }} onClick={(e: any): void => {
-            if (micstate === "mic") {
-                setmic("mic_off");
+        <div style={{ backgroundColor: "red" }} onClick={(e: any): void => {
+            if (micstate === "on") {
+                setmic("off");
                 setvoice(false);
-                e.target.style.backgroundColor = "red";
+                e.currentTarget.style.backgroundColor = "red";
             }
             else {
-                setmic("mic")
+                setmic("on")
                 setvoice(true);
-                e.target.style.backgroundColor = "rgb(92, 87, 87)";
+                e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
             }
-        }} className="material-symbols-outlined toolicons">
-            {micstate}
-        </span>
-        <span style={{ backgroundColor: "red" }} onClick={(e: any) => {
-            if (videostate === "videocam") {
-                setvideo("videocam_off");
+        }} className="toolicons">
+            {micstate === "on" ? <IconContext.Provider value={{className: "react-icons" }}>
+                <BsMic/>
+            </IconContext.Provider> : <IconContext.Provider value={{className: "react-icons" }}>
+                    <BsMicMute />
+            </IconContext.Provider> }
+        </div>
+        <div style={{ backgroundColor: "red" }} onClick={(e: any) => {
+            if (videostate === "on") {
+                setvideo("off");
                 setcamera(false);
-                e.target.style.backgroundColor = "red";
+                e.currentTarget.style.backgroundColor = "red";
             }
             else {
-                setvideo("videocam")
+                setvideo("on")
                 setcamera(true);
-                e.target.style.backgroundColor = "rgb(92, 87, 87)";
+                e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
             }
-        }} className="material-symbols-outlined toolicons">
-            {videostate}
-        </span>
-        <span className="material-symbols-outlined toolicons">
-            present_to_all
-        </span>
-        <span onClick={(e: any) => {
-
+        }} className="toolicons">
+            {videostate === "on" ? <IconContext.Provider value={{className: "react-icons" }}>
+                <BiVideo />
+            </IconContext.Provider> :<IconContext.Provider value={{className: "react-icons" }}>
+                    <BiVideoOff /> 
+            </IconContext.Provider>  }
+        </div>
+        <div className="toolicons" onClick={(e: any)=>{
+            if(screenshare==="off"){
+                setscreenshare("on");
+                e.currentTarget.style.backgroundColor = "#407fbf"
+            }
+            else{
+                setscreenshare("off");
+                e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
+            }
+        }}>
+            {screenshare === "on" ? <IconContext.Provider value={{className: "react-icons" }}>
+                <TbScreenShare />
+            </IconContext.Provider> : <IconContext.Provider value={{className: "react-icons" }}>
+                    <TbScreenShareOff />
+            </IconContext.Provider> }
+        </div>
+        <div onClick={(e: any) => {
             if (raisehand === "off") {
                 sethand("on")
-                e.target.style.backgroundColor = "#407fbf"
+                e.currentTarget.style.backgroundColor = "#407fbf"
             }
             else {
                 sethand("off")
-                e.target.style.backgroundColor = "rgb(92, 87, 87)";
+                e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
             }
-        }} className="material-symbols-outlined toolicons">
-            back_hand
-        </span>
-        <span className="material-symbols-outlined toolicons">
-            more_vert
-        </span>
-        <span className="material-symbols-outlined toolicons" style={{ borderRadius: "30px", width: "70px", backgroundColor: "red" }}>
-            call_end
-        </span>
-        <span className="material-symbols-outlined">
-            group
-        </span>
-        <span className="material-symbols-outlined">
-            chat
-        </span>
-        <span className="material-symbols-outlined">
-            admin_panel_settings
-        </span>
+        }} className="toolicons">
+            <IconContext.Provider value={{ className: "react-icons" }}>
+                <FaRegHandPaper />
+            </IconContext.Provider> 
+            
+        </div>
+        <div className="toolicons">
+            <IconContext.Provider value={{ className: "react-icons" }}>
+                <BsThreeDotsVertical />
+            </IconContext.Provider> 
+           
+        </div>
+        <div className="toolicons" style={{ borderRadius: "30px", width: "70px", backgroundColor: "red" }}>
+            <IconContext.Provider value={{ className: "react-icons" }}>
+                <MdCallEnd />
+            </IconContext.Provider> 
+            
+        </div>
+        <div>
+            <IconContext.Provider value={{ className: "react-icons" }}>
+                <BsPeople />
+            </IconContext.Provider> 
+           
+        </div>
+        <div>
+            <IconContext.Provider value={{ className: "react-icons" }}>
+                <BsChatLeftText />
+            </IconContext.Provider> 
+          
+        </div>
+        <div>
+            <IconContext.Provider value={{ className: "react-icons" }}>
+                <MdOutlineAdminPanelSettings />
+            </IconContext.Provider> 
+        </div>
     </>
 }
 
@@ -507,7 +553,7 @@ const MeetUI = (props: any) => {
             </div>
         </div>
         <div id="toolbar">
-            <Toolbars setcamera={setcamera} setvoice={setvoice} />
+                <Toolbars setcamera={setcamera} setvoice={setvoice} />
         </div>
 
     </div>
