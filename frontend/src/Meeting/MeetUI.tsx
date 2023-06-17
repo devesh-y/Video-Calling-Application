@@ -92,7 +92,11 @@ function Toolbars(props: any) {
             </IconContext.Provider> 
            
         </div>
-        <div className="toolicons" style={{ borderRadius: "30px", width: "70px", backgroundColor: "red" }}>
+        <div onClick={()=>{
+               return location.href="https://crowdconnect.netlify.app/";
+               
+            }
+        } className="toolicons" style={{ borderRadius: "30px", width: "70px", backgroundColor: "red" }}>
             <IconContext.Provider value={{ className: "react-icons" }}>
                 <MdCallEnd />
             </IconContext.Provider> 
@@ -517,6 +521,11 @@ const MeetUI = (props: any) => {
     const mapping = useRef(new Map());
     const socket = useContext(SocketContext);
     const remotestream = useRef<Map<peerservice, Array<MediaStream | string>>>(new Map());
+    useEffect(()=>{
+        window.addEventListener('popstate', function () {
+            return location.href = "https://crowdconnect.netlify.app/";
+        });
+    },[])
     useEffect(() => {
         socket.on("askhost", ({ name, to }) => {
             console.log("request reached");
