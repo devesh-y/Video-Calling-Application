@@ -99,9 +99,7 @@ socketio.on("connection", (socket) => {
     socket.on("hostdecision",({answer,to})=>{
         socket.to(to).emit("hostdecision",answer);
     })
-    socket.on("disconnectuser",(code)=>{
-        socket.to(code).emit("disconnectuser", socket.id);
-    })
+   
     socket.on("disconnect",()=>{
         console.log("socket disconnected");
         if(socketroom.get(socket.id)){
