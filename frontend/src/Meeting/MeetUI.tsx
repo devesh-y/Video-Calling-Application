@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect, useRef, memo, useCallback} from "react";
+import { useContext, useState, useEffect, useRef, memo, useCallback, useSyncExternalStore} from "react";
 import { useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meetUI.css"
@@ -124,6 +124,12 @@ const Myvideo = memo((props: any) => {
     const { selfname, camera, voice, remotestream } = props;
     const [video, setvideo] = useState<MediaStream | null>(null);
     const [audiostate, setaudiostate] = useState(false);
+    const [mycolor,setcolor]=useState("green");
+    useEffect(()=>{
+        const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
+        const randomNumber = (Math.floor(Math.random() * 10)) % 9 + 1;
+        setcolor(colors[randomNumber]);
+    },[])
     const sendvideo = useCallback(async () => {
         let stream = await navigator.mediaDevices.getUserMedia({
             audio: false, video: true
@@ -145,7 +151,7 @@ const Myvideo = memo((props: any) => {
             console.log("track added");
             peer.peer.addTrack(videotrack, stream);
         })
-    }, [camera])
+    }, [])
     const stopsendvideo = useCallback(() => {
         const array = Array.from(remotestream.current as Map<peerservice, Array<MediaStream | string>>);
         array.forEach((data) => {
@@ -164,7 +170,7 @@ const Myvideo = memo((props: any) => {
 
         })
 
-    }, [camera])
+    }, [])
     const sendaudio = useCallback(async () => {
         let stream = await navigator.mediaDevices.getUserMedia({
             audio: true, video: false
@@ -186,7 +192,7 @@ const Myvideo = memo((props: any) => {
             console.log("track added");
             peer.peer.addTrack(audiotrack, stream);
         })
-    }, [voice])
+    }, [])
     const stopsendaudio = useCallback(() => {
         const array = Array.from(remotestream.current as Map<peerservice, Array<MediaStream | string>>);
         array.forEach((data) => {
@@ -205,7 +211,7 @@ const Myvideo = memo((props: any) => {
 
         })
 
-    }, [voice])
+    }, [])
     useEffect(() => {
         async function func() {
             if (camera === true) {
@@ -244,9 +250,10 @@ const Myvideo = memo((props: any) => {
         func();
 
     }, [camera, voice])
+    
     return <div className="usergrid">
         <div className="userview">
-            {video === null ? <div className="avatar">{selfname[0]} </div> : <ReactPlayer playing={true} muted={true} url={video} height="120px" />}
+            {video === null ? <div className="avatar" style={{backgroundColor:`${mycolor}`}}>{selfname[0]} </div> : <ReactPlayer playing={true} muted={true} url={video} height="120px" />}
         </div>
         <div className="usertitle" >{selfname}</div>
     </div>
@@ -259,9 +266,11 @@ const Participants = (props: any) => {
 
     return <>
         {Array.from(streams as Map<peerservice, Array<string | MediaStream>>).map(([_peer, data], index) => {
+            const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
+            const randomNumber = (Math.floor(Math.random() * 10))%9 + 1;
             return <div key={index} className="usergrid">
                 <div className="userview">
-                    {data[0] === null ? <div className="avatar">{(data[2] as string)[0]} </div> : <ReactPlayer playing={true} muted={true} url={data[0]} height="120px" />}
+                    {data[0] === null ? <div className="avatar" style={{backgroundColor:`${colors[randomNumber]}`}}>{(data[2] as string)[0]} </div> : <ReactPlayer playing={true} muted={true} url={data[0]} height="120px" />}
                     {data[1] != null && <ReactPlayer playing={true} muted={false} url={data[1]} width="0px" height="0px" />}
                 </div>
                 <div className="usertitle" >{data[2] as string}</div>
