@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect, useRef, memo, useCallback, useSyncExternalStore} from "react";
+import { useContext, useState, useEffect, useRef, memo, useCallback} from "react";
 import { useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meetUI.css"
