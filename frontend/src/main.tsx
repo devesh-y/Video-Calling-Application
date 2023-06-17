@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Meet from './Meeting/MeetAuth.tsx'
 import Askjoin from './AskJoin/Askjoin.tsx'
 import Home from './HomePage/Home.tsx'
+import Endmeet from './Meeting/EndMeet.tsx'
 import SocketProvider from './Socket/SocketClient.tsx';
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
 
@@ -14,7 +15,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
                     <Route path='' element={<Meet />} />
                     <Route path='ask' element={<Askjoin />} />
                 </Route>
-                
+                <Route path='/end' element={<Endmeet />} />
             </Routes>
         </BrowserRouter>
     </SocketProvider>

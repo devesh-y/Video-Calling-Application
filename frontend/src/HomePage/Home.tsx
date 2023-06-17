@@ -19,7 +19,7 @@ function Meet_create(){
             return;
         }
         
-        navigate(`/${code}/ask`,{state:{selfname:name}});
+        navigate(`/${code}/ask`, { state: { selfname: name }, replace: true });
 
     }
     function newmeeting(){
@@ -37,7 +37,7 @@ function Meet_create(){
             d.setTime(d.getTime() + (24 * 60 * 60 * 1000));
             let expires = "expires=" + d.toUTCString();
             document.cookie = code + "=" + "host" + ";" + expires + ";path=/";
-            navigate(`/${code}/ask`, { state: { selfname: name } });
+            navigate(`/${code}/ask`, { state: { selfname: name }, replace: true });
             
         })
 

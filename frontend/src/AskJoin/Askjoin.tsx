@@ -40,7 +40,7 @@ const Askjoin=()=>{
         socket.on("hostdecision",(answer)=>{
             if(answer===true){
                 setcookie();
-                navigate(`/${code}`, { state: { permission: true, selfname: location.state.selfname } });
+                navigate(`/${code}`, { state: { permission: true, selfname: location.state.selfname }, replace: true });
             }
             else{
                 setaskloader(false);
@@ -52,11 +52,11 @@ const Askjoin=()=>{
     useEffect(()=>{
         if(location.state==undefined || location.state==null || location.state.selfname==""){
             console.log("navigating to home page");
-            navigate(`/`,{state:{code}});
+            navigate(`/`, { state: { code }, replace: true });
             return;
         }
         else if (getCookieValue(code as string) === "host" || getCookieValue(code as string) === "participant" ){
-            navigate(`/${code}`,{state:{permission:true, selfname:location.state.selfname}});
+            navigate(`/${code}`, { state: { permission: true, selfname: location.state.selfname }, replace: true });
         }
         else{
             socket.emit("check-meet",code);

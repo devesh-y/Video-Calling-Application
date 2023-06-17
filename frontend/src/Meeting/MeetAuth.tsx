@@ -32,7 +32,7 @@ function Meet() {
     useEffect(()=>{
         if (location.state == undefined || location.state == null || location.state.permission!=true)
         {
-            navigate(`/`, { state: { code } });
+            navigate(`/`, { state: { code }, replace: true });
         }
         else{
             setselfname(location.state.selfname);

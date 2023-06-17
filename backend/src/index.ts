@@ -8,9 +8,9 @@ const app=express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// setInterval(()=>{
-//     console.log("server is running");
-// },60000)
+setInterval(()=>{
+    console.log("server is running");
+},60000)
 const httpserver=http.createServer(app);
 
 const socketio = new Server(httpserver,{

@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect, useRef, memo, useCallback} from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams  } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meetUI.css"
 import { peerservice } from "../WebRTC/p2p";
@@ -10,7 +10,6 @@ import {BiVideoOff,BiVideo} from "react-icons/bi";
 import {TbScreenShare,TbScreenShareOff} from "react-icons/tb";
 import {FaRegHandPaper} from "react-icons/fa";
 import { MdCallEnd, MdOutlineAdminPanelSettings } from "react-icons/md";
-
 import "./toolbar.css"
 function Toolbars(props: any) {
     const { setcamera, setvoice } = props;
@@ -18,6 +17,8 @@ function Toolbars(props: any) {
     const [videostate, setvideo] = useState("off")
     const [raisehand, sethand] = useState("off");
     const [screenshare,setscreenshare]=useState("off");
+    const navigate=useNavigate();
+    const socket=useContext(SocketContext);
     return <>
         <div style={{ backgroundColor: "red" }} onClick={(e: any): void => {
             if (micstate === "on") {
@@ -93,10 +94,10 @@ function Toolbars(props: any) {
            
         </div>
         <div onClick={()=>{
-               return location.href="https://crowdconnect.netlify.app/";
-               
-            }
-        } className="toolicons" style={{ borderRadius: "30px", width: "70px", backgroundColor: "red" }}>
+            socket.disconnect();
+            navigate(`/end`, { replace: true });
+            
+        }} className="toolicons" style={{ borderRadius: "30px", width: "70px", backgroundColor: "red" }}>
             <IconContext.Provider value={{ className: "react-icons" }}>
                 <MdCallEnd />
             </IconContext.Provider> 
@@ -521,11 +522,6 @@ const MeetUI = (props: any) => {
     const mapping = useRef(new Map());
     const socket = useContext(SocketContext);
     const remotestream = useRef<Map<peerservice, Array<MediaStream | string>>>(new Map());
-    useEffect(()=>{
-        window.addEventListener('popstate', function () {
-            return location.href = "https://crowdconnect.netlify.app/";
-        });
-    },[])
     useEffect(() => {
         socket.on("askhost", ({ name, to }) => {
             console.log("request reached");
