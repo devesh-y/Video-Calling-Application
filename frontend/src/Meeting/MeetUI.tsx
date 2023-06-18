@@ -1,128 +1,12 @@
 import { useContext, useState, useEffect, useRef, memo, useCallback} from "react";
-import { useNavigate, useParams  } from "react-router-dom";
+import {  useParams  } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import "./meetUI.css"
 import { peerservice } from "../WebRTC/p2p";
 import ReactPlayer from "react-player";
-import { IconContext } from "react-icons";
-import { BsMic, BsMicMute, BsThreeDotsVertical, BsPeople, BsChatLeftText } from "react-icons/bs";
-import {BiVideoOff,BiVideo} from "react-icons/bi";
-import {TbScreenShare,TbScreenShareOff} from "react-icons/tb";
-import {FaRegHandPaper} from "react-icons/fa";
-import { MdCallEnd, MdOutlineAdminPanelSettings } from "react-icons/md";
-import "./toolbar.css"
-function Toolbars(props: any) {
-    const { setcamera, setvoice } = props;
-    const [micstate, setmic] = useState("off");
-    const [videostate, setvideo] = useState("off")
-    const [raisehand, sethand] = useState("off");
-    const [screenshare,setscreenshare]=useState("off");
-    const navigate=useNavigate();
-    const socket=useContext(SocketContext);
-    return <>
-        <div style={{ backgroundColor: "red" }} onClick={(e: any): void => {
-            if (micstate === "on") {
-                setmic("off");
-                setvoice(false);
-                e.currentTarget.style.backgroundColor = "red";
-            }
-            else {
-                setmic("on")
-                setvoice(true);
-                e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
-            }
-        }} className="toolicons">
-            {micstate === "on" ? <IconContext.Provider value={{className: "react-icons" }}>
-                <BsMic/>
-            </IconContext.Provider> : <IconContext.Provider value={{className: "react-icons" }}>
-                    <BsMicMute />
-            </IconContext.Provider> }
-        </div>
-        <div style={{ backgroundColor: "red" }} onClick={(e: any) => {
-            if (videostate === "on") {
-                setvideo("off");
-                setcamera(false);
-                e.currentTarget.style.backgroundColor = "red";
-            }
-            else {
-                setvideo("on")
-                setcamera(true);
-                e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
-            }
-        }} className="toolicons">
-            {videostate === "on" ? <IconContext.Provider value={{className: "react-icons" }}>
-                <BiVideo />
-            </IconContext.Provider> :<IconContext.Provider value={{className: "react-icons" }}>
-                    <BiVideoOff /> 
-            </IconContext.Provider>  }
-        </div>
-        <div className="toolicons" onClick={(e: any)=>{
-            if(screenshare==="off"){
-                setscreenshare("on");
-                e.currentTarget.style.backgroundColor = "#407fbf"
-            }
-            else{
-                setscreenshare("off");
-                e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
-            }
-        }}>
-            {screenshare === "on" ? <IconContext.Provider value={{className: "react-icons" }}>
-                <TbScreenShare />
-            </IconContext.Provider> : <IconContext.Provider value={{className: "react-icons" }}>
-                    <TbScreenShareOff />
-            </IconContext.Provider> }
-        </div>
-        <div onClick={(e: any) => {
-            if (raisehand === "off") {
-                sethand("on")
-                e.currentTarget.style.backgroundColor = "#407fbf"
-            }
-            else {
-                sethand("off")
-                e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
-            }
-        }} className="toolicons">
-            <IconContext.Provider value={{ className: "react-icons" }}>
-                <FaRegHandPaper />
-            </IconContext.Provider> 
-            
-        </div>
-        <div className="toolicons">
-            <IconContext.Provider value={{ className: "react-icons" }}>
-                <BsThreeDotsVertical />
-            </IconContext.Provider> 
-           
-        </div>
-        <div onClick={()=>{
-            socket.disconnect();
-            navigate(`/end`, { replace: true });
-            
-        }} className="toolicons" style={{ borderRadius: "30px", width: "70px", backgroundColor: "red" }}>
-            <IconContext.Provider value={{ className: "react-icons" }}>
-                <MdCallEnd />
-            </IconContext.Provider> 
-            
-        </div>
-        <div>
-            <IconContext.Provider value={{ className: "react-icons" }}>
-                <BsPeople />
-            </IconContext.Provider> 
-           
-        </div>
-        <div>
-            <IconContext.Provider value={{ className: "react-icons" }}>
-                <BsChatLeftText />
-            </IconContext.Provider> 
-          
-        </div>
-        <div>
-            <IconContext.Provider value={{ className: "react-icons" }}>
-                <MdOutlineAdminPanelSettings />
-            </IconContext.Provider> 
-        </div>
-    </>
-}
-
+import Toolbars from "./Toolbar";
+import { RxCross1 } from "react-icons/rx"
+import { AiOutlineSend } from "react-icons/ai";
 const Myvideo = memo((props: any) => {
     const { code } = useParams();
     const socket = useContext(SocketContext);
@@ -509,11 +393,32 @@ const Videos = memo((props: any) => {
 
 
 
-    return <>
+    return <div id="crowdmeet">
         <Myvideo selfname={selfname} camera={camera} voice={voice} remotestream={remotestream} />
         <Participants streams={remotestream.current} />
-    </>
+    </div>
 })
+
+const closepanel=(id:string)=>{
+    (document.getElementById(id) as HTMLElement).style.right="-500px";
+}
+const Chatpanel=(props:any)=>{
+    const {remotestream}=props;
+    const [myinput,setmyinput]=useState("");
+    const [chats,setchats]=useState([]);
+    return <div id="panelchat">
+        <div className="crossbutton" onClick={()=>{
+            closepanel("panelchat");
+        }}> <RxCross1/> </div>
+        <div id="showchat"></div>
+        <div id="addchat">
+            <input placeholder="Send a message" value={myinput} type="text"  onChange={(e)=>setmyinput(e.target.value)}/>
+            <AiOutlineSend />
+        </div>
+        
+    </div>
+}
+
 const MeetUI = (props: any) => {
     const { selfname } = props;
     const [camera, setcamera] = useState(false);
@@ -563,18 +468,9 @@ const MeetUI = (props: any) => {
                 })}
             </div>
         }
-        <div id="crowdmeet">
-            <div id="videos">
-                <Videos selfname={selfname} mapping={mapping} remotestream={remotestream} camera={camera} voice={voice} />
-            </div>
-            <div id="sidepanel">
-
-            </div>
-        </div>
-        <div id="toolbar">
-                <Toolbars setcamera={setcamera} setvoice={setvoice} />
-        </div>
-
+        <Chatpanel remotestream={remotestream} />
+        <Videos selfname={selfname} mapping={mapping} remotestream={remotestream} camera={camera} voice={voice} />
+        <Toolbars setcamera={setcamera} setvoice={setvoice}/>
     </div>
 }
 
