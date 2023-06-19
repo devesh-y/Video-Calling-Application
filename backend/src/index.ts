@@ -15,11 +15,12 @@ const httpserver=http.createServer(app);
 
 const socketio = new Server(httpserver,{
     cors: {
-        origin: "*"
+        origin: "https://crowdconnect.netlify.app"
         // https://crowdconnect.netlify.app
     }
 });
 const socketroom=new Map();
+const socketusername=new Map();
 const roomhost=new Map();
 socketio.on("connection", (socket) => {
     console.log(`connected to client of id ${socket.id}`);
@@ -51,9 +52,10 @@ socketio.on("connection", (socket) => {
             socket.emit("check-meet", false);
         }
     })
-    socket.on("join-meet",({code,type})=>{
+    socket.on("join-meet",({code,type,name})=>{
         socket.join(code);
         socketroom.set(socket.id,code);
+        socketusername.set(socket.id,name);
         if(type==="host"){
             roomhost.set(code,socket.id);
         }
@@ -99,12 +101,16 @@ socketio.on("connection", (socket) => {
     socket.on("hostdecision",({answer,to})=>{
         socket.to(to).emit("hostdecision",answer);
     })
-   
+    socket.on("chatmessage",({name,message})=>{
+        let room=socketroom.get(socket.id);
+        socket.to(room).emit("chatmessage", { name, message });
+    })
     socket.on("disconnect",()=>{
         console.log("socket disconnected");
         if(socketroom.get(socket.id)){
             socket.to(socketroom.get(socket.id)).emit("disconnectuser", socket.id);
             socketroom.delete(socket.id)
+            socketusername.delete(socket.id);
             let temproom = socketroom.get(socket.id);
             if (roomhost.get(temproom) === socket.id) {
                 roomhost.delete(temproom);

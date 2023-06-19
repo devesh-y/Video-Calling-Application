@@ -151,8 +151,6 @@ const Myvideo = memo((props: any) => {
 const Participants = (props: any) => {
 
     const { streams } = props;
-    console.log("the size of map is ", streams.size);
-
     return <>
         {Array.from(streams as Map<peerservice, Array<string | MediaStream>>).map(([_peer, data], index) => {
             const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
@@ -335,7 +333,6 @@ const Videos = memo((props: any) => {
         //getting answers
         socket.on("sendAnswer", async ({ answer, from }) => {
             console.log("answers coming");
-            console.log(mapping.current);
             const peer: peerservice = mapping.current.get(from);
             try {
                 await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
@@ -399,25 +396,73 @@ const Videos = memo((props: any) => {
     </div>
 })
 
-const closepanel=(id:string)=>{
-    (document.getElementById(id) as HTMLElement).style.right="-500px";
+
+const getmessagetime = (): string => {
+    const currentTime = new Date();
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    const amPm = hours >= 12 ? 'PM' : 'AM';
+
+    // Convert hours to 12-hour format
+    const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
+
+    // Add leading zeros to minutes and seconds if necessary
+    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+    // Combine all the formatted values
+    return `${formattedHours}:${formattedMinutes} ${amPm}`;
 }
-const Chatpanel=(props:any)=>{
-    const {remotestream}=props;
+
+const Chatpanel=memo((props:any)=>{
+    const {selfname}=props;
+    const socket=useContext(SocketContext);
     const [myinput,setmyinput]=useState("");
-    const [chats,setchats]=useState([]);
+    const [chats, setchats] = useState<Array<Array<string>>>([]);
+    const sendMessage = () => {
+        if(myinput===""){
+            return;
+        }
+        const messagetime = getmessagetime();
+        setchats([...chats, ["You", messagetime,myinput]])
+        socket.emit("chatmessage", { name: selfname, message: myinput })
+        setmyinput("");
+        
+    }
+    useEffect(()=>{
+        socket.on("chatmessage", ({ name, message})=>{
+            const messagetime = getmessagetime();
+            setchats([...chats, [name, messagetime, message]])
+        })
+        let container = (document.getElementById("showchat") as HTMLElement);
+        container.scrollTop = container.scrollHeight;
+        return ()=>{
+            socket.off("chatmessage")
+        }
+    },[chats])
     return <div id="panelchat">
         <div className="crossbutton" onClick={()=>{
-            closepanel("panelchat");
+            (document.getElementById("panelchat") as HTMLElement).style.right = "-400px";
         }}> <RxCross1/> </div>
-        <div id="showchat"></div>
+        <div id="showchat">
+            {chats.map((value:Array<String>,index:any)=>{
+                return <div key={index} className="userchat">
+                    <pre style={{marginBottom:"3px"}}><span style={{fontWeight:"600"}}>{value[0]}</span>     <span style={{opacity:"0.6"}}>{value[1]}</span> </pre>
+                    <pre>{value[2]} </pre>
+                </div>
+            })}
+        </div>
         <div id="addchat">
-            <input placeholder="Send a message" value={myinput} type="text"  onChange={(e)=>setmyinput(e.target.value)}/>
-            <AiOutlineSend />
+            <input placeholder="Send a message" value={myinput} type="text" onKeyDown={(event)=>{
+                if(event.key==="Enter"){
+                    sendMessage();
+                }
+            }}  onChange={(e)=>setmyinput(e.target.value)}/>  
+            <div onClick={sendMessage}>
+               {myinput!=""?<AiOutlineSend/>:<></>}
+            </div>
         </div>
         
     </div>
-}
+})
 
 const MeetUI = (props: any) => {
     const { selfname } = props;
@@ -468,7 +513,7 @@ const MeetUI = (props: any) => {
                 })}
             </div>
         }
-        <Chatpanel remotestream={remotestream} />
+        <Chatpanel selfname={selfname}/>
         <Videos selfname={selfname} mapping={mapping} remotestream={remotestream} camera={camera} voice={voice} />
         <Toolbars setcamera={setcamera} setvoice={setvoice}/>
     </div>

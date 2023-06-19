@@ -36,7 +36,7 @@ function Meet() {
         }
         else{
             setselfname(location.state.selfname);
-            socket.emit("join-meet", { code, type: getCookieValue(code as string) })
+            socket.emit("join-meet", { code, type: getCookieValue(code as string), name: location.state.selfname })
         }
     },[])
     return (loading === true) ?

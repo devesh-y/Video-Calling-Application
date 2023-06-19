@@ -103,19 +103,19 @@ function Toolbars(props: any) {
             </IconContext.Provider>
 
         </div>
-        <div onClick={() => opensidepanel("people")}>
+        <div className="othertools">
             <IconContext.Provider value={{ className: "react-icons" }}>
                 <BsPeople />
             </IconContext.Provider>
 
         </div>
-        <div onClick={() => opensidepanel("panelchat")}>
+        <div className="othertools" onClick={() => opensidepanel("panelchat")} >
             <IconContext.Provider value={{ className: "react-icons" }}>
                 <BsChatLeftText />
             </IconContext.Provider>
 
         </div>
-        <div onClick={() => opensidepanel("admin")}>
+        <div className="othertools">
             <IconContext.Provider value={{ className: "react-icons" }}>
                 <MdOutlineAdminPanelSettings />
             </IconContext.Provider>
