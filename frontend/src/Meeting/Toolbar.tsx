@@ -16,8 +16,22 @@ function Toolbars(props: any) {
     const [screenshare, setscreenshare] = useState("off");
     const navigate = useNavigate();
     const socket = useContext(SocketContext);
-    function opensidepanel(option: string) {
-        (document.getElementById(option) as HTMLElement).style.right = "0px";   
+    function openclosepanel(option: string) {   
+        if ((document.getElementById(option) as HTMLElement).style.right == "" || (document.getElementById(option) as HTMLElement).style.right == "-400px"){
+            if(option==="panelchat"){
+                (document.getElementById("panelpeople") as HTMLElement).style.right = "-400px"; 
+            }else{
+                (document.getElementById("panelchat") as HTMLElement).style.right = "-400px"; 
+            }
+        }
+        let value:string = (document.getElementById(option) as HTMLElement).style.right;
+        if (value ==="0px"){
+            (document.getElementById(option) as HTMLElement).style.right = "-400px"; 
+        }
+        else{
+            (document.getElementById(option) as HTMLElement).style.right = "0px";
+        }
+           
     }
     return <div id="toolbar">
         <div style={{ backgroundColor: "red" }} onClick={(e: any): void => {
@@ -103,13 +117,13 @@ function Toolbars(props: any) {
             </IconContext.Provider>
 
         </div>
-        <div className="othertools">
+        <div className="othertools" onClick={() => openclosepanel("panelpeople")}>
             <IconContext.Provider value={{ className: "react-icons" }}>
                 <BsPeople />
             </IconContext.Provider>
 
         </div>
-        <div className="othertools" onClick={() => opensidepanel("panelchat")} >
+        <div className="othertools" onClick={() => openclosepanel("panelchat")} >
             <IconContext.Provider value={{ className: "react-icons" }}>
                 <BsChatLeftText />
             </IconContext.Provider>

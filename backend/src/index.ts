@@ -5,8 +5,6 @@ import { Server } from "socket.io";
 import crypto from "crypto";
 config();
 const app=express();
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
 
 setInterval(()=>{
     console.log("server is running");
@@ -94,6 +92,7 @@ socketio.on("connection", (socket) => {
     socket.on("stopaudio",(code)=>{
         socket.to(code).emit("stopaudio",socket.id);
     })
+    //asking permission of host to enter
     socket.on("askhost",({code,name})=>{
         let temphost=roomhost.get(code);
         socket.to(temphost).emit("askhost",{name,to:socket.id});
@@ -101,6 +100,7 @@ socketio.on("connection", (socket) => {
     socket.on("hostdecision",({answer,to})=>{
         socket.to(to).emit("hostdecision",answer);
     })
+    //sending chat messages
     socket.on("chatmessage",({name,message})=>{
         let room=socketroom.get(socket.id);
         socket.to(room).emit("chatmessage", { name, message });

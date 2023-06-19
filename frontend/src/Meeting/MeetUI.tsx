@@ -391,24 +391,38 @@ const Videos = memo((props: any) => {
 
 
     return <div id="crowdmeet">
+        <PeoplePanel remotestream={remotestream}/>
         <Myvideo selfname={selfname} camera={camera} voice={voice} remotestream={remotestream} />
         <Participants streams={remotestream.current} />
     </div>
 })
-
+const PeoplePanel=(props:any)=>{
+    const {remotestream}=props;
+    return <div id="panelpeople">
+        <div className="crossbutton" onClick={() => {
+            (document.getElementById("panelpeople") as HTMLElement).style.right = "-400px";
+        }}> <RxCross1 /> 
+        </div>
+        <div id="peoplelist">
+            {Array.from(remotestream.current as Map<peerservice, Array<string | MediaStream>>).map(([_peer, data], index) => {
+                const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
+                const randomNumber = (Math.floor(Math.random() * 10)) % 9 + 1;
+                return <div key={index} className="userdetails">
+                    <div className="avatar" style={{backgroundColor:`${colors[randomNumber]}`}}>{(data[2] as string)[0]}</div>
+                    <div className="panelpeoname">{data[2] as string}</div>
+                </div>
+            })}
+        </div>
+    </div>
+}
 
 const getmessagetime = (): string => {
     const currentTime = new Date();
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
     const amPm = hours >= 12 ? 'PM' : 'AM';
-
-    // Convert hours to 12-hour format
     const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
-
-    // Add leading zeros to minutes and seconds if necessary
     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
-    // Combine all the formatted values
     return `${formattedHours}:${formattedMinutes} ${amPm}`;
 }
 
