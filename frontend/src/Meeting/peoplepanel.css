@@ -1,0 +1,72 @@
+.crossbutton {
+    position: absolute;
+    right: 0px;
+    color: black;
+    margin: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#panelpeople {
+    position: fixed;
+    transition: all 0.2s linear;
+    top: 0px;
+    right: -400px;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    width: 300px;
+    height: 500px;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+}
+#peoplelist {
+    flex: 1 1 100%;
+    padding: 10px;
+}
+
+#peoplelist::-webkit-scrollbar {
+    width: 5px;
+}
+
+#peoplelist::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#peoplelist::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#peoplelist::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.userdetails {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.panelpeoname {
+    flex: 1 1 100%;
+}
+
+
+.avatar {
+    color: black;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 50%;
+}

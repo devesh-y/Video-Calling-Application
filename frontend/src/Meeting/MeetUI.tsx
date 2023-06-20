@@ -5,8 +5,8 @@ import "./meetUI.css"
 import { peerservice } from "../WebRTC/p2p";
 import ReactPlayer from "react-player";
 import Toolbars from "./Toolbar";
-import { RxCross1 } from "react-icons/rx"
-import { AiOutlineSend } from "react-icons/ai";
+import Chatpanel from "./ChatPanel";
+import PeoplePanel from "./PeoplePanel";
 const Myvideo = memo((props: any) => {
     const { code } = useParams();
     const socket = useContext(SocketContext);
@@ -394,87 +394,6 @@ const Videos = memo((props: any) => {
         <PeoplePanel remotestream={remotestream}/>
         <Myvideo selfname={selfname} camera={camera} voice={voice} remotestream={remotestream} />
         <Participants streams={remotestream.current} />
-    </div>
-})
-const PeoplePanel=(props:any)=>{
-    const {remotestream}=props;
-    return <div id="panelpeople">
-        <div className="crossbutton" onClick={() => {
-            (document.getElementById("panelpeople") as HTMLElement).style.right = "-400px";
-        }}> <RxCross1 /> 
-        </div>
-        <div id="peoplelist">
-            {Array.from(remotestream.current as Map<peerservice, Array<string | MediaStream>>).map(([_peer, data], index) => {
-                const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
-                const randomNumber = (Math.floor(Math.random() * 10)) % 9 + 1;
-                return <div key={index} className="userdetails">
-                    <div className="avatar" style={{backgroundColor:`${colors[randomNumber]}`}}>{(data[2] as string)[0]}</div>
-                    <div className="panelpeoname">{data[2] as string}</div>
-                </div>
-            })}
-        </div>
-    </div>
-}
-
-const getmessagetime = (): string => {
-    const currentTime = new Date();
-    const hours = currentTime.getHours();
-    const minutes = currentTime.getMinutes();
-    const amPm = hours >= 12 ? 'PM' : 'AM';
-    const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
-    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
-    return `${formattedHours}:${formattedMinutes} ${amPm}`;
-}
-
-const Chatpanel=memo((props:any)=>{
-    const {selfname}=props;
-    const socket=useContext(SocketContext);
-    const [myinput,setmyinput]=useState("");
-    const [chats, setchats] = useState<Array<Array<string>>>([]);
-    const sendMessage = () => {
-        if(myinput===""){
-            return;
-        }
-        const messagetime = getmessagetime();
-        setchats([...chats, ["You", messagetime,myinput]])
-        socket.emit("chatmessage", { name: selfname, message: myinput })
-        setmyinput("");
-        
-    }
-    useEffect(()=>{
-        socket.on("chatmessage", ({ name, message})=>{
-            const messagetime = getmessagetime();
-            setchats([...chats, [name, messagetime, message]])
-        })
-        let container = (document.getElementById("showchat") as HTMLElement);
-        container.scrollTop = container.scrollHeight;
-        return ()=>{
-            socket.off("chatmessage")
-        }
-    },[chats])
-    return <div id="panelchat">
-        <div className="crossbutton" onClick={()=>{
-            (document.getElementById("panelchat") as HTMLElement).style.right = "-400px";
-        }}> <RxCross1/> </div>
-        <div id="showchat">
-            {chats.map((value:Array<String>,index:any)=>{
-                return <div key={index} className="userchat">
-                    <pre style={{marginBottom:"3px"}}><span style={{fontWeight:"600"}}>{value[0]}</span>     <span style={{opacity:"0.6"}}>{value[1]}</span> </pre>
-                    <pre>{value[2]} </pre>
-                </div>
-            })}
-        </div>
-        <div id="addchat">
-            <input placeholder="Send a message" value={myinput} type="text" onKeyDown={(event)=>{
-                if(event.key==="Enter"){
-                    sendMessage();
-                }
-            }}  onChange={(e)=>setmyinput(e.target.value)}/>  
-            <div onClick={sendMessage}>
-               {myinput!=""?<AiOutlineSend/>:<></>}
-            </div>
-        </div>
-        
     </div>
 })
 

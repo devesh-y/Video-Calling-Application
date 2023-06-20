@@ -15,7 +15,7 @@ function Meet_create(){
             return;
         }
         if(socket.connected===false){
-            alert("Try after few seconds. (max - 30s)")
+            alert("Let the server restart. (max - 30s)")
             return;
         }
         
@@ -28,7 +28,7 @@ function Meet_create(){
             return;
         }
         if (socket.connected === false) {
-            alert("Try after few seconds. (max - 30s)")
+            alert("Let the server restart. (max - 30s)")
             return;
         }
         socket.emit("create-room");
