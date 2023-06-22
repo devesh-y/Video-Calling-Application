@@ -70,15 +70,25 @@ function Toolbars(props: any) {
                     let stream = await navigator.mediaDevices.getDisplayMedia({
                         video: true
                     })
-                    
+                    stream.getVideoTracks()[0].onended = ()=>{
+                        myscreen.current.querySelector('.userview').querySelector("video").srcObject = null;
+                        myscreen.current.style.display = "none";
+                        setscreenshare("off");
+                    };
                     setscreenshare("on");
-                    myscreen.current.props.url={stream};
-                } catch (error) {
-                    console.log("user rejects");
+                    myscreen.current.style.display="block";
+                    myscreen.current.querySelector('.userview').querySelector("video").srcObject=stream;              
                     
+                } catch (error) {
+
+                    console.log("user rejects");
                 }
             }
             else {
+                let stream =myscreen.current.querySelector('.userview').querySelector("video").srcObject;
+                (stream as MediaStream).getVideoTracks().forEach((track:MediaStreamTrack) => track.stop());
+                myscreen.current.querySelector('.userview').querySelector("video").srcObject=null;
+                myscreen.current.style.display="none";
                 setscreenshare("off");
             }
         }}>

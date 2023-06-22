@@ -15,9 +15,7 @@ const Myvideo = memo((props: any) => {
     const [audiostate, setaudiostate] = useState(false);
     const [mycolor,setcolor]=useState("green");
     useEffect(()=>{
-        let rpvideo = myscreen.current.querySelector('.userview')
-        console.log(rpvideo);
-        
+
         const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
         const randomNumber = (Math.floor(Math.random() * 10)) % 9 + 1;
         setcolor(colors[randomNumber]);
@@ -144,16 +142,17 @@ const Myvideo = memo((props: any) => {
     }, [camera, voice])
     
     return <>
-        <div className="usergrid">
+        <div className="usergrid" >
             <div className="userview">
                 {video === null ? <div className="avatar" style={{ backgroundColor: `${mycolor}` }}>{selfname[0]} </div> : <ReactPlayer playing={true} muted={true} url={video} height="120px" />}
             </div>
             <div className="usertitle" >{selfname}</div>
         </div>
         
-        <div className="usergrid" ref={myscreen}>
+        <div className="usergrid" ref={myscreen} style={{display:"none"}} >
             <div className="userview">
-                <ReactPlayer playing={true} muted={true}  height="120px" />
+                <video autoPlay height="120px" >
+                </video>
             </div>
             <div className="usertitle" >{selfname}</div>
         </div>
