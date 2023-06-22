@@ -10,11 +10,14 @@ import PeoplePanel from "./PeoplePanel";
 const Myvideo = memo((props: any) => {
     const { code } = useParams();
     const socket = useContext(SocketContext);
-    const { selfname, camera, voice, remotestream } = props;
+    const { selfname, camera, voice, remotestream, myscreen } = props;
     const [video, setvideo] = useState<MediaStream | null>(null);
     const [audiostate, setaudiostate] = useState(false);
     const [mycolor,setcolor]=useState("green");
     useEffect(()=>{
+        let rpvideo = myscreen.current.querySelector('.userview')
+        console.log(rpvideo);
+        
         const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
         const randomNumber = (Math.floor(Math.random() * 10)) % 9 + 1;
         setcolor(colors[randomNumber]);
@@ -140,12 +143,23 @@ const Myvideo = memo((props: any) => {
 
     }, [camera, voice])
     
-    return <div className="usergrid">
-        <div className="userview">
-            {video === null ? <div className="avatar" style={{backgroundColor:`${mycolor}`}}>{selfname[0]} </div> : <ReactPlayer playing={true} muted={true} url={video} height="120px" />}
+    return <>
+        <div className="usergrid">
+            <div className="userview">
+                {video === null ? <div className="avatar" style={{ backgroundColor: `${mycolor}` }}>{selfname[0]} </div> : <ReactPlayer playing={true} muted={true} url={video} height="120px" />}
+            </div>
+            <div className="usertitle" >{selfname}</div>
         </div>
-        <div className="usertitle" >{selfname}</div>
-    </div>
+        
+        <div className="usergrid" ref={myscreen}>
+            <div className="userview">
+                <ReactPlayer playing={true} muted={true}  height="120px" />
+            </div>
+            <div className="usertitle" >{selfname}</div>
+        </div>
+        
+        
+    </> 
 
 });
 const Participants = (props: any) => {
@@ -168,7 +182,7 @@ const Participants = (props: any) => {
 }
 
 const Videos = memo((props: any) => {
-    const { mapping, remotestream, selfname, camera, voice } = props;
+    const { mapping, remotestream, selfname, camera, voice, myscreen} = props;
     const [peers, setpeers] = useState<number>(0);
     const { code } = useParams();
     const socket = useContext(SocketContext);
@@ -392,7 +406,7 @@ const Videos = memo((props: any) => {
 
     return <div id="crowdmeet">
         <PeoplePanel remotestream={remotestream}/>
-        <Myvideo selfname={selfname} camera={camera} voice={voice} remotestream={remotestream} />
+        <Myvideo selfname={selfname} camera={camera} voice={voice} remotestream={remotestream} myscreen={myscreen}  />
         <Participants streams={remotestream.current} />
     </div>
 })
@@ -403,6 +417,7 @@ const MeetUI = (props: any) => {
     const [askers, setaskers] = useState(new Map());
     const [voice, setvoice] = useState(false);
     const mapping = useRef(new Map());
+    const myscreen=useRef(null);
     const socket = useContext(SocketContext);
     const remotestream = useRef<Map<peerservice, Array<MediaStream | string>>>(new Map());
     // useEffect(()=>{
@@ -447,8 +462,8 @@ const MeetUI = (props: any) => {
             </div>
         }
         <Chatpanel selfname={selfname}/>
-        <Videos selfname={selfname} mapping={mapping} remotestream={remotestream} camera={camera} voice={voice} />
-        <Toolbars setcamera={setcamera} setvoice={setvoice}/>
+        <Videos selfname={selfname} mapping={mapping} remotestream={remotestream} camera={camera} voice={voice} myscreen={myscreen} />
+        <Toolbars setcamera={setcamera} setvoice={setvoice} myscreen={myscreen} />
     </div>
 }
 

@@ -1,7 +1,6 @@
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
-import { IconContext } from "react-icons";
 import { BsMic, BsMicMute, BsThreeDotsVertical, BsPeople, BsChatLeftText } from "react-icons/bs";
 import { BiVideoOff, BiVideo } from "react-icons/bi";
 import { TbScreenShare, TbScreenShareOff } from "react-icons/tb";
@@ -9,7 +8,7 @@ import { FaRegHandPaper } from "react-icons/fa";
 import { MdCallEnd, MdOutlineAdminPanelSettings } from "react-icons/md";
 import "./toolbar.css"
 function Toolbars(props: any) {
-    const { setcamera, setvoice } = props;
+    const { setcamera, setvoice ,myscreen} = props;
     const [micstate, setmic] = useState("off");
     const [videostate, setvideo] = useState("off")
     const [raisehand, sethand] = useState("off");
@@ -46,11 +45,7 @@ function Toolbars(props: any) {
                 e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
             }
         }} className="toolicons">
-            {micstate === "on" ? <IconContext.Provider value={{ className: "react-icons" }}>
-                <BsMic />
-            </IconContext.Provider> : <IconContext.Provider value={{ className: "react-icons" }}>
-                <BsMicMute />
-            </IconContext.Provider>}
+            {micstate === "on" ? <BsMic size='20' />:  <BsMicMute size='20' />}
         </div>
         <div style={{ backgroundColor: "red" }} onClick={(e: any) => {
             if (videostate === "on") {
@@ -64,27 +59,30 @@ function Toolbars(props: any) {
                 e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
             }
         }} className="toolicons">
-            {videostate === "on" ? <IconContext.Provider value={{ className: "react-icons" }}>
-                <BiVideo />
-            </IconContext.Provider> : <IconContext.Provider value={{ className: "react-icons" }}>
-                <BiVideoOff />
-            </IconContext.Provider>}
+            {videostate === "on" ? <BiVideo size='20' /> : <BiVideoOff size='20' />
+       }
         </div>
-        <div className="toolicons" onClick={(e: any) => {
+        <div className="toolicons" onClick={async () => 
+        {
             if (screenshare === "off") {
-                setscreenshare("on");
-                e.currentTarget.style.backgroundColor = "#407fbf"
+                
+                try {
+                    let stream = await navigator.mediaDevices.getDisplayMedia({
+                        video: true
+                    })
+                    
+                    setscreenshare("on");
+                    myscreen.current.props.url={stream};
+                } catch (error) {
+                    console.log("user rejects");
+                    
+                }
             }
             else {
                 setscreenshare("off");
-                e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
             }
         }}>
-            {screenshare === "on" ? <IconContext.Provider value={{ className: "react-icons" }}>
-                <TbScreenShare />
-            </IconContext.Provider> : <IconContext.Provider value={{ className: "react-icons" }}>
-                <TbScreenShareOff />
-            </IconContext.Provider>}
+            {screenshare === "on" ? <TbScreenShare size='20' /> : <TbScreenShareOff size='20' /> }
         </div>
         <div onClick={(e: any) => {
             if (raisehand === "off") {
@@ -96,43 +94,31 @@ function Toolbars(props: any) {
                 e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
             }
         }} className="toolicons">
-            <IconContext.Provider value={{ className: "react-icons" }}>
-                <FaRegHandPaper />
-            </IconContext.Provider>
+        
+            <FaRegHandPaper size='20' />
+ 
 
         </div>
         <div className="toolicons">
-            <IconContext.Provider value={{ className: "react-icons" }}>
-                <BsThreeDotsVertical />
-            </IconContext.Provider>
-
+            <BsThreeDotsVertical size='20' />
         </div>
         <div onClick={() => {
             socket.disconnect();
             navigate(`/end`, { replace: true });
 
         }} className="toolicons" style={{ borderRadius: "30px", width: "70px", backgroundColor: "red" }}>
-            <IconContext.Provider value={{ className: "react-icons" }}>
-                <MdCallEnd />
-            </IconContext.Provider>
-
+            <MdCallEnd size='20'  />
         </div>
         <div className="othertools" onClick={() => openclosepanel("panelpeople")}>
-            <IconContext.Provider value={{ className: "react-icons" }}>
-                <BsPeople />
-            </IconContext.Provider>
+            <BsPeople size='20'  />
 
         </div>
         <div className="othertools" onClick={() => openclosepanel("panelchat")} >
-            <IconContext.Provider value={{ className: "react-icons" }}>
-                <BsChatLeftText />
-            </IconContext.Provider>
+            <BsChatLeftText size='20'  />
 
         </div>
         <div className="othertools">
-            <IconContext.Provider value={{ className: "react-icons" }}>
-                <MdOutlineAdminPanelSettings />
-            </IconContext.Provider>
+            <MdOutlineAdminPanelSettings size='20'  />
         </div>
     </div>
 }
