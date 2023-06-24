@@ -116,6 +116,9 @@ const Myvideo = memo((props: any) => {
             }
             if (camera === false) {
                 if (video != null) {
+                    video.getVideoTracks().forEach((track: MediaStreamTrack)=>{
+                        track.stop();
+                    })
                     setvideo(null);
                     stopsendvideo();
                     socket.emit("stopvideo", code);
