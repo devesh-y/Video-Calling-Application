@@ -179,7 +179,10 @@ const Participants = (props: any) => {
         })}
     </>
 }
-
+const Screens=()=>{
+    return <>
+    </>
+}
 const Videos = memo((props: any) => {
     const { mapping, remotestream, selfname, camera, voice, myscreen} = props;
     const [peers, setpeers] = useState<number>(0);
@@ -404,9 +407,10 @@ const Videos = memo((props: any) => {
 
 
     return <div id="crowdmeet">
-        <PeoplePanel remotestream={remotestream}/>
+        <PeoplePanel remotestream={remotestream} selfname={selfname} />
         <Myvideo selfname={selfname} camera={camera} voice={voice} remotestream={remotestream} myscreen={myscreen}  />
         <Participants streams={remotestream.current} />
+        <Screens></Screens>
     </div>
 })
 
@@ -419,11 +423,7 @@ const MeetUI = (props: any) => {
     const myscreen=useRef(null);
     const socket = useContext(SocketContext);
     const remotestream = useRef<Map<peerservice, Array<MediaStream | string>>>(new Map());
-    // useEffect(()=>{
-    //     window.addEventListener('beforeunload', ()=>{
-    //         window.history.replaceState({}, '', '/end'); 
-    //     });
-    // },[])
+
     useEffect(() => {
         socket.on("askhost", ({ name, to }) => {
             console.log("request reached");
