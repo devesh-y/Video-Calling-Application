@@ -182,10 +182,11 @@ const Participants = (props: any) => {
         })}
     </>
 }
-const Screens=()=>{
-    return <>
-    </>
-}
+// const Screens=()=>{
+//     return <>
+//         <p>screens</p>
+//     </>
+// }
 const Videos = memo((props: any) => {
     const { mapping, remotestream, selfname, camera, voice, myscreen} = props;
     const [peers, setpeers] = useState<number>(0);
@@ -413,7 +414,7 @@ const Videos = memo((props: any) => {
         <PeoplePanel remotestream={remotestream} selfname={selfname} />
         <Myvideo selfname={selfname} camera={camera} voice={voice} remotestream={remotestream} myscreen={myscreen}  />
         <Participants streams={remotestream.current} />
-        <Screens></Screens>
+        {/* <Screens/> */}
     </div>
 })
 
