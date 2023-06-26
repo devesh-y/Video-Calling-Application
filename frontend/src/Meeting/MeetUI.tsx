@@ -182,29 +182,32 @@ const Participants = (props: any) => {
         })}
     </>
 }
-// const Screens=()=>{
-//     return <>
-//         <p>screens</p>
-//     </>
-// }
+const Screens=()=>{
+    return <>
+        
+    </>
+}
 const Videos = memo((props: any) => {
-    const { mapping, remotestream, selfname, camera, voice, myscreen} = props;
+    const { mapping, setmapping, remotestream, setremotestream, selfname, camera, voice, myscreen} = props;
     const [peers, setpeers] = useState<number>(0);
     const { code } = useParams();
     const socket = useContext(SocketContext);
-
-    useEffect(() => {
+    useEffect(()=>{
         //first triggering to get offers from existing  --for new user
         socket.emit("sendoffers", { code, selfname });
         console.log("triggering to get offers from existing users");
+    },[])
 
-
+    useEffect(() => {
+        
         //new user get offers from existing
         socket.on("offerscame", async ({ offer, from, remotename }) => {
             console.log("offer coming from existing users");
             const peer = new peerservice();
-            remotestream.current.set(peer, [null, null, remotename])
-            setpeers(remotestream.current.size);
+            let temprstream=new Map(remotestream);
+            temprstream.set(peer, [null, null, remotename]);
+            setremotestream(temprstream);
+   
             peer.peer.addEventListener("negotiationneeded", async () => {
                 console.log("nego needed");
                 const offer = await peer.getoffer();
@@ -216,21 +219,29 @@ const Videos = memo((props: any) => {
                     console.log("video track comes");
                     let videostream = new MediaStream();
                     videostream.addTrack(ev.track);
-                    remotestream.current.get(peer)[0] = videostream;
+                    let temprstream = new Map<peerservice, Array<string | MediaStream|null>>(remotestream);
+                    let changedstream = temprstream.get(peer);
+                    if(changedstream){
+                        changedstream[0] = videostream;
+                        setremotestream(temprstream);
+                    }     
                 }
                 else if (ev.track.kind === "audio") {
                     console.log("audio track comes");
                     let audiostream = new MediaStream();
                     audiostream.addTrack(ev.track);
-                    remotestream.current.get(peer)[1] = audiostream;
+                    let temprstream: Map<peerservice, Array<string | MediaStream>> = new Map(remotestream);
+                    let changedstream = temprstream.get(peer);
+                    if (changedstream) {
+                        changedstream[1] = audiostream;
+                        setremotestream(temprstream);
+                    }   
                 }
-                let x: number = Math.floor(Math.random() * 1000);
-                if (x === peers) {
-                    x = Math.floor(Math.random() * 1000);
-                }
-                setpeers(x);
             })
-            mapping.current.set(from, peer);
+
+            let tempmapping=new Map(mapping);
+            tempmapping.set(from, peer);
+            setmapping(tempmapping);
 
             //answer this offer 
             try {
@@ -251,8 +262,10 @@ const Videos = memo((props: any) => {
             console.log("sending offers to new user");
 
             const peer = new peerservice();
-            remotestream.current.set(peer, [null, null, remotename])
-            setpeers(remotestream.current.size);
+            let temprstream = new Map(remotestream);
+            temprstream.set(peer, [null, null, remotename]);
+            setremotestream(temprstream);
+   
             peer.peer.addEventListener("negotiationneeded", async () => {
                 console.log("nego needed");
                 const offer = await peer.getoffer();
@@ -263,21 +276,28 @@ const Videos = memo((props: any) => {
                     console.log("video track comes");
                     let videostream = new MediaStream();
                     videostream.addTrack(ev.track);
-                    remotestream.current.get(peer)[0] = videostream;
+                    let temprstream: Map<peerservice, Array<string | MediaStream>> = new Map(remotestream);
+                    let changedstream = temprstream.get(peer);
+                    if (changedstream) {
+                        changedstream[0] = videostream;
+                        setremotestream(temprstream);
+                    }
                 }
                 else if (ev.track.kind === "audio") {
                     console.log("audio track comes");
                     let audiostream = new MediaStream();
                     audiostream.addTrack(ev.track);
-                    remotestream.current.get(peer)[1] = audiostream;
+                    let temprstream: Map<peerservice, Array<string | MediaStream>> = new Map(remotestream);
+                    let changedstream = temprstream.get(peer);
+                    if (changedstream) {
+                        changedstream[1] = audiostream;
+                        setremotestream(temprstream);
+                    }
                 }
-                let x: number = Math.floor(Math.random() * 1000);
-                if (x === peers) {
-                    x = Math.floor(Math.random() * 1000);
-                }
-                setpeers(x);
             })
-            mapping.current.set(to, peer);
+            let tempmapping = new Map(mapping);
+            tempmapping.set(to, peer);
+            setmapping(tempmapping);
 
             try {
                 const offer = await peer.getoffer();
@@ -288,17 +308,14 @@ const Videos = memo((props: any) => {
             }
 
         });
+        
         socket.on("stopvideo", (from) => {
-            const peer: peerservice = mapping.current.get(from);
+            const peer: peerservice = mapping.get(from);
             remotestream.current.get(peer)[0] = null;
-            let x: number = Math.floor(Math.random() * 1000);
-            if (x === peers) {
-                x = Math.floor(Math.random() * 1000);
-            }
-            setpeers(x);
         })
+            
         socket.on("stopaudio", (from) => {
-            const peer: peerservice = mapping.current.get(from);
+            const peer: peerservice = mapping.get(from);
             remotestream.current.get(peer)[1] = null;
             let x: number = Math.floor(Math.random() * 1000);
             if (x === peers) {
@@ -310,7 +327,7 @@ const Videos = memo((props: any) => {
 
         socket.on("peer:negoNeeded", async ({ from, offer }) => {
             console.log("nego offer comes");
-            const peer: peerservice = mapping.current.get(from);
+            const peer: peerservice = mapping.get(from);
             try {
                 const answer = await peer.getanswer(offer);
                 socket.emit("peer:negodone", { to: from, answer });
@@ -322,7 +339,7 @@ const Videos = memo((props: any) => {
         })
         socket.on("peer:negofinal", async ({ from, answer }) => {
             console.log("nego answer comes");
-            const peer: peerservice = mapping.current.get(from);
+            const peer: peerservice = mapping.get(from);
             try {
                 await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
             }
@@ -332,28 +349,36 @@ const Videos = memo((props: any) => {
             }
         })
         socket.on("disconnectuser", (from) => {
-            if (mapping.current.get(from)) {
-                const peer: peerservice = mapping.current.get(from);
+            if (mapping.get(from)) {
+                const peer: peerservice = mapping.get(from);
                 peer.peer.close();
                 remotestream.current.delete(peer);
                 let x: number = Math.floor(Math.random() * 1000);
                 if (x === peers) {
                     x = Math.floor(Math.random() * 1000);
                 }
-                mapping.current.delete(from);
+                mapping.delete(from);
                 setpeers(x);
             }
-
-
         })
+        return ()=>{
+            socket.off("disconnectuser");
+            socket.off("offerscame");
+            socket.off("sendoffers");
+            socket.off("stopvideo");
+            socket.off("stopaudio");
+            socket.off("peer:negoNeeded");
+            socket.off("peer:negofinal");
+        }
 
-    }, [])
+    }, [mapping,remotestream])
+
     useEffect(() => {
 
         //getting answers
         socket.on("sendAnswer", async ({ answer, from }) => {
             console.log("answers coming");
-            const peer: peerservice = mapping.current.get(from);
+            const peer: peerservice = mapping.get(from);
             try {
                 await peer.peer.setRemoteDescription(new RTCSessionDescription(answer));
                 console.log("the state of camera is ", camera);
@@ -414,7 +439,7 @@ const Videos = memo((props: any) => {
         <PeoplePanel remotestream={remotestream} selfname={selfname} />
         <Myvideo selfname={selfname} camera={camera} voice={voice} remotestream={remotestream} myscreen={myscreen}  />
         <Participants streams={remotestream.current} />
-        {/* <Screens/> */}
+        <Screens/>
     </div>
 })
 
@@ -423,11 +448,11 @@ const MeetUI = (props: any) => {
     const [camera, setcamera] = useState(false);
     const [askers, setaskers] = useState(new Map());
     const [voice, setvoice] = useState(false);
-    const mapping = useRef(new Map());
+    const [mapping,setmapping] = useState(new Map<peerservice,>());
     const myscreen=useRef(null);
     const socket = useContext(SocketContext);
-    const remotestream = useRef<Map<peerservice, Array<MediaStream | string>>>(new Map());
-
+    const [remotestream, setremotestream] = useState(new Map<peerservice, Array<string | MediaStream |null>>());
+    // const remotescreens=useState([]);
     useEffect(() => {
         socket.on("askhost", ({ name, to }) => {
             console.log("request reached");
@@ -465,7 +490,7 @@ const MeetUI = (props: any) => {
             </div>
         }
         <Chatpanel selfname={selfname}/>
-        <Videos selfname={selfname} mapping={mapping} remotestream={remotestream} camera={camera} voice={voice} myscreen={myscreen} />
+        <Videos selfname={selfname} mapping={mapping} setmapping={setmapping} remotestream={remotestream} setremotestream={setremotestream} camera={camera} voice={voice} myscreen={myscreen} />
         <Toolbars setcamera={setcamera} setvoice={setvoice} myscreen={myscreen} />
     </div>
 }
