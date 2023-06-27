@@ -79,7 +79,7 @@ function Toolbars(props: any) {
                 dispatch(setaudio(stream));
                 setmic("on")
                 try {
-                    console.log("sending video");
+                    console.log("sending audio");
                     const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string | null>>);
                     array.forEach((data) => {
                         const peer: peerservice = data[0];

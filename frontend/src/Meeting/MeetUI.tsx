@@ -62,16 +62,23 @@ const Screens=()=>{
         
     </>
 }
-const Videos = (props: any) => {
+const Videos = memo((props: any) => {
     const { selfname, myscreen} = props;
     const { code } = useParams();
     const socket = useContext(SocketContext);
+    const tracknumber=useRef(new Map<peerservice,number>());
     const totalpeers = useRef(new Map<peerservice, Array<MediaStream | null | string>>());
-    let remotestream: Map<peerservice, Array<MediaStream | null | string>> = useSelector((state:any) => state.slice1.remotestream);
-    let mapping = useSelector((state: any) => state.slice1.mapping);
+    const remotestream: Map<peerservice, Array<MediaStream | null | string>> = useSelector((state:any) => state.slice1.remotestream);
+    const mapping = useSelector((state: any) => state.slice1.mapping);
+    const video:MediaStream=useSelector((state:any)=>state.slice1.video);
+    const audio: MediaStream = useSelector((state: any) => state.slice1.audio);
     const dispatch=useDispatch();
     
     const addtrackfunc = useCallback((ev: any, peer: peerservice) => {
+        if(!tracknumber.current.get(peer)){
+            tracknumber.current.set(peer,1);
+            return;
+        }
 
         if (ev.track.kind === "video") {
             console.log("video track comes");
@@ -266,7 +273,20 @@ const Videos = (props: any) => {
             console.log(error);
             console.log("error in setting local description of answer recieved");
         }
-    },[mapping])
+        if(video!=null){
+            setTimeout(() => {
+                const track=video.getVideoTracks()[0];
+                peer.peer.addTrack(track,video);
+            }, 1000);
+        }
+        if(audio!=null){
+            setTimeout(() => {
+                const track=audio.getAudioTracks()[0];
+                peer.peer.addTrack(track,audio);
+            }, 1000);
+        }
+
+    },[mapping,video,audio])
 
     useEffect(() => {
         //first triggering to get offers from existing  --for new user
@@ -282,10 +302,6 @@ const Videos = (props: any) => {
         socket.on("sendoffers", sendofferfunc);
         socket.on("stopvideo", stopvideofunc)
         socket.on("stopaudio", stopaudiofunc)
-        socket.on("peer:negoNeeded", peernegoneedfunc);
-        socket.on("peer:negofinal", peernegofinalfunc);
-        //getting answers
-        socket.on("sendAnswer", gettinganswerfunc);
         socket.on("disconnectuser", disconnectuserfunc);
 
         return () => {
@@ -293,12 +309,26 @@ const Videos = (props: any) => {
             socket.off("sendoffers");
             socket.off("stopvideo")
             socket.off("stopaudio")
-            socket.off("peer:negoNeeded");
-            socket.off("peer:negofinal");
-            socket.off("sendAnswer")
             socket.off("disconnectuser");
         }
     }, [mapping,remotestream])
+
+    useEffect(()=>{
+        socket.on("peer:negoNeeded", peernegoneedfunc);
+        socket.on("peer:negofinal", peernegofinalfunc);
+        return ()=>{
+            socket.off("peer:negoNeeded");
+            socket.off("peer:negofinal");
+        }
+    },[mapping])
+
+    useEffect(()=>{
+        //getting answers
+        socket.on("sendAnswer", gettinganswerfunc);
+        return ()=>{
+            socket.off("sendAnswer")
+        }
+    },[mapping,video,audio])
 
 
 
@@ -308,7 +338,7 @@ const Videos = (props: any) => {
         <Participants />
         <Screens/>
     </div>
-}
+})
 
 const MeetUI = (props: any) => {
     const { selfname } = props;
