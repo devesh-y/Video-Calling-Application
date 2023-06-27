@@ -1,6 +1,9 @@
-import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {  useContext, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
+import { useSelector, useDispatch } from "react-redux"
+import { peerservice } from "../WebRTC/p2p";
+import { setscreen ,setvideo,setaudio} from "../ReduxStore/slice1";
 import { BsMic, BsMicMute, BsThreeDotsVertical, BsPeople, BsChatLeftText } from "react-icons/bs";
 import { BiVideoOff, BiVideo } from "react-icons/bi";
 import { TbScreenShare, TbScreenShareOff } from "react-icons/tb";
@@ -8,13 +11,21 @@ import { FaRegHandPaper } from "react-icons/fa";
 import { MdCallEnd, MdOutlineAdminPanelSettings } from "react-icons/md";
 import "./toolbar.css"
 function Toolbars(props: any) {
-    const { setcamera, setvoice ,myscreen} = props;
+    const code=useParams();
+    const { myscreen} = props;
+    const videoref=useRef<HTMLDivElement| null>(null);
+    const audioref=useRef<HTMLDivElement| null>(null);
     const [micstate, setmic] = useState("off");
-    const [videostate, setvideo] = useState("off")
+    const [videostate, setvideostate] = useState("off")
     const [raisehand, sethand] = useState("off");
     const [screenshare, setscreenshare] = useState("off");
     const navigate = useNavigate();
     const socket = useContext(SocketContext);
+    const screen=useSelector((state:any)=>state.slice1.screen);
+    const remotestream = useSelector((state: any) => state.slice1.remotestream);
+    const video=useSelector((state:any)=>state.slice1.video);
+    const audio = useSelector((state: any) => state.slice1.audio);
+    const dispatch = useDispatch();
     function openclosepanel(option: string) {   
         if ((document.getElementById(option) as HTMLElement).style.right == "" || (document.getElementById(option) as HTMLElement).style.right == "-400px"){
             if(option==="panelchat"){
@@ -33,30 +44,109 @@ function Toolbars(props: any) {
            
     }
     return <div id="toolbar">
-        <div style={{ backgroundColor: "red" }} onClick={(e: any): void => {
+        <div ref={audioref} style={{ backgroundColor: "red" }} onClick={async() => {
             if (micstate === "on") {
                 setmic("off");
-                setvoice(false);
-                e.currentTarget.style.backgroundColor = "red";
+                audio.getAudioTracks().forEach((track: MediaStreamTrack) => track.stop());
+                const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string | null>>);
+                array.forEach((data) => {
+                    const peer: peerservice = data[0];
+                    const audiosenders = peer.peer.getSenders().filter((sender) => {
+                        return sender.track && sender.track.kind === "audio";
+                    });
+
+                    try { 
+                        audiosenders.forEach((audiosender) => {
+                            console.log("sender found");
+                            peer.peer.removeTrack(audiosender as RTCRtpSender)
+                        })
+                    }
+                    catch (err) {
+                        console.log(err);
+                    }
+
+                })
+                socket.emit("stopaudio", code);
+                dispatch(setaudio(null));
+                if (audioref.current) {
+                    audioref.current.style.backgroundColor = "red";
+                }
             }
             else {
+                let stream = await navigator.mediaDevices.getUserMedia({
+                    video: false, audio: true
+                });
+                dispatch(setaudio(stream));
                 setmic("on")
-                setvoice(true);
-                e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
+                try {
+                    console.log("sending video");
+                    const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string | null>>);
+                    array.forEach((data) => {
+                        const peer: peerservice = data[0];
+                        let audiotrack = stream.getAudioTracks()[0];
+                        console.log("track added");
+                        peer.peer.addTrack(audiotrack, stream);
+                    })
+                }
+                catch (error) {
+                    console.log(error);
+                }
+                if (audioref.current) {
+                    audioref.current.style.backgroundColor = "rgb(92, 87, 87)";
+                }
             }
         }} className="toolicons">
             {micstate === "on" ? <BsMic size='20' />:  <BsMicMute size='20' />}
         </div>
-        <div style={{ backgroundColor: "red" }} onClick={(e: any) => {
+        <div ref={videoref} style={{ backgroundColor: "red" }} onClick={async() => {
             if (videostate === "on") {
-                setvideo("off");
-                setcamera(false);
-                e.currentTarget.style.backgroundColor = "red";
+                setvideostate("off");
+                video.getVideoTracks().forEach((track: MediaStreamTrack) => track.stop());
+                const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string|null>>);
+                array.forEach((data) => {
+                    const peer: peerservice = data[0];
+                    const videosenders = peer.peer.getSenders().filter((sender) => {
+                        return sender.track && sender.track.kind === "video";
+                    });
+                    try {
+                        videosenders.forEach((videosender) => {
+                            console.log("sender found");
+                            peer.peer.removeTrack(videosender as RTCRtpSender)
+                        })
+                    }
+                    catch (err) {
+                        console.log(err);
+                    }
+                })
+                socket.emit("stopvideo",code);
+                dispatch(setvideo(null));
+                if (videoref.current){
+                    videoref.current.style.backgroundColor = "red";
+                }
+                
             }
             else {
-                setvideo("on")
-                setcamera(true);
-                e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
+                let stream= await navigator.mediaDevices.getUserMedia({
+                    video:true,audio:false
+                });
+                dispatch(setvideo(stream));
+                setvideostate("on")
+                try {
+                    console.log("sending video");
+                    const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string|null>>);
+                    array.forEach((data) => {
+                        const peer: peerservice = data[0];
+                        let videotrack = stream.getVideoTracks()[0];
+                        console.log("track added");
+                        peer.peer.addTrack(videotrack, stream);
+                    })
+                }
+                catch (error) {
+                    console.log(error);
+                }
+                if (videoref.current) {
+                    videoref.current.style.backgroundColor = "rgb(92, 87, 87)";
+                }
             }
         }} className="toolicons">
             {videostate === "on" ? <BiVideo size='20' /> : <BiVideoOff size='20' />
@@ -70,11 +160,13 @@ function Toolbars(props: any) {
                     let stream = await navigator.mediaDevices.getDisplayMedia({
                         video: true
                     })
-                    stream.getVideoTracks()[0].onended = ()=>{
-                        myscreen.current.querySelector('.userview').querySelector("video").srcObject = null;
-                        myscreen.current.style.display = "none";
-                        setscreenshare("off");
-                    };
+                    // stream.getVideoTracks()[0].onended = ()=>{
+                    //     myscreen.current.querySelector('.userview').querySelector("video").srcObject = null;
+                    //     myscreen.current.style.display = "none";
+                    //     setscreenshare("off");
+                    //     dispatch(setscreen(null));
+                    // };
+                    dispatch(setscreen(stream));
                     setscreenshare("on");
                     myscreen.current.style.display="block";
                     myscreen.current.querySelector('.userview').querySelector("video").srcObject=stream;              
@@ -85,10 +177,10 @@ function Toolbars(props: any) {
                 }
             }
             else {
-                let stream =myscreen.current.querySelector('.userview').querySelector("video").srcObject;
-                (stream as MediaStream).getVideoTracks().forEach((track:MediaStreamTrack) => track.stop());
+                screen.getVideoTracks().forEach((track:MediaStreamTrack) => track.stop());
                 myscreen.current.querySelector('.userview').querySelector("video").srcObject=null;
                 myscreen.current.style.display="none";
+                dispatch(setscreen(null));
                 setscreenshare("off");
             }
         }}>

@@ -1,8 +1,11 @@
 import { RxCross1 } from "react-icons/rx"
+import {memo} from "react"
+import {useSelector} from "react-redux"
 import { peerservice } from "../WebRTC/p2p";
 import "./peoplepanel.css"
-const PeoplePanel = (props: any) => {
-    const { remotestream,selfname } = props;
+const PeoplePanel = memo((props: any) => {
+    const { selfname } = props;
+    const remotestream=useSelector((state:any)=>state.slice1.remotestream);
     return <div id="panelpeople">
         <div className="crossbutton" onClick={() => {
             (document.getElementById("panelpeople") as HTMLElement).style.right = "-400px";
@@ -23,5 +26,5 @@ const PeoplePanel = (props: any) => {
             })}
         </div>
     </div>
-}
+})
 export default PeoplePanel;
