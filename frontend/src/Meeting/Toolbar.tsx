@@ -11,7 +11,7 @@ import { FaRegHandPaper } from "react-icons/fa";
 import { MdCallEnd, MdOutlineAdminPanelSettings } from "react-icons/md";
 import "./toolbar.css"
 function Toolbars(props: any) {
-    const code=useParams();
+    const {code}=useParams();
     const { myscreen} = props;
     const videoref=useRef<HTMLDivElement| null>(null);
     const audioref=useRef<HTMLDivElement| null>(null);

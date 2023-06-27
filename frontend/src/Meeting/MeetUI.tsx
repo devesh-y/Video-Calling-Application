@@ -70,11 +70,7 @@ const Videos = (props: any) => {
     let remotestream: Map<peerservice, Array<MediaStream | null | string>> = useSelector((state:any) => state.slice1.remotestream);
     let mapping = useSelector((state: any) => state.slice1.mapping);
     const dispatch=useDispatch();
-    useEffect(()=>{
-        //first triggering to get offers from existing  --for new user
-        socket.emit("sendoffers", { code, selfname });
-        console.log("triggering to get offers from existing users");
-    },[])
+    
     const addtrackfunc = useCallback((ev: any, peer: peerservice) => {
 
         if (ev.track.kind === "video") {
@@ -197,24 +193,24 @@ const Videos = (props: any) => {
     const stopvideofunc = useCallback((from:any) => {
         const peer: peerservice = mapping.get(from);
         let temprstream: Map<peerservice, Array<string | MediaStream | null>> = new Map(remotestream);
-        let changedstream = temprstream.get(peer);
-        if (changedstream) {
-            changedstream[0] = null;
-            totalpeers.current=temprstream;
+        if (temprstream.get(peer)) { 
+            let arr = Array.from(temprstream.get(peer) as Array<MediaStream | null | string>);
+            arr[0] = null;
+            temprstream.set(peer, arr);
+            totalpeers.current = temprstream;
             dispatch(setremotestream(temprstream));
-            
         }
     },[mapping,remotestream])
 
     const stopaudiofunc = useCallback((from:any) => {
         const peer: peerservice = mapping.get(from);
         let temprstream: Map<peerservice, Array<string | MediaStream | null>> = new Map(remotestream);
-        let changedstream = temprstream.get(peer);
-        if (changedstream) {
-            changedstream[1] = null;
+        if (temprstream.get(peer)) {
+            let arr = Array.from(temprstream.get(peer) as Array<MediaStream | null | string>);
+            arr[1] = null;
+            temprstream.set(peer,arr);
             totalpeers.current = temprstream;
             dispatch(setremotestream(temprstream));
-            
         }
     },[mapping,remotestream])
 
@@ -251,7 +247,7 @@ const Videos = (props: any) => {
             peer.peer.close();
             let updremote = new Map(remotestream);
             updremote.delete(peer);
-            totalpeers.current.delete(peer)
+            totalpeers.current=updremote;
             dispatch(setremotestream(updremote));
             let updmapping = new Map(mapping);
             updmapping.delete(from);
@@ -272,6 +268,13 @@ const Videos = (props: any) => {
         }
     },[mapping])
 
+    useEffect(() => {
+        //first triggering to get offers from existing  --for new user
+        socket.emit("sendoffers", { code, selfname });
+        console.log("triggering to get offers from existing users");
+        
+    }, [])
+    
     useEffect(() => {
         //new user get offers from existing
         socket.on("offerscame", offercamefunc);
