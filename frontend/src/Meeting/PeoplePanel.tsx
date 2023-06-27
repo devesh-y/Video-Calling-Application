@@ -13,7 +13,7 @@ const PeoplePanel = (props: any) => {
                 <div className="avatar" style={{ backgroundColor: "red" }}>{(selfname as string)[0]}</div>
                 <div className="panelpeoname">{selfname as string} (You)</div>
             </div>
-            {Array.from(remotestream.current as Map<peerservice, Array<string | MediaStream>>).map(([_peer, data], index) => {
+            {Array.from(remotestream as Map<peerservice, Array<string | MediaStream>>).map(([_peer, data], index) => {
                 const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
                 const randomNumber = (Math.floor(Math.random() * 10)) % 9 + 1;
                 return <div key={index} className="userdetails">
