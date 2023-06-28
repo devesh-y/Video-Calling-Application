@@ -167,6 +167,7 @@ const Videos = memo((props: any) => {
                     const mytrack = mystream.getAudioTracks()[0];
 
                     peer.peer.addTrack(mytrack, mystream)
+                    tracknumber.current.set(peer,1);
                 })
                 .catch(error => console.error('Error decoding audio data:', error));
         }

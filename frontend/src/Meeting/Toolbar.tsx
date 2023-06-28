@@ -15,6 +15,7 @@ function Toolbars(props: any) {
     const { myscreen} = props;
     const videoref=useRef<HTMLDivElement| null>(null);
     const audioref=useRef<HTMLDivElement| null>(null);
+    const screenref = useRef<HTMLDivElement | null>(null);
     const [micstate, setmic] = useState("off");
     const [videostate, setvideostate] = useState("off")
     const [raisehand, sethand] = useState("off");
@@ -44,7 +45,7 @@ function Toolbars(props: any) {
            
     }
     return <div id="toolbar">
-        <div ref={audioref} style={{ backgroundColor: "red" }} onClick={async() => {
+        <div title="mic" ref={audioref} style={{ backgroundColor: "red" }} onClick={async() => {
             if (micstate === "on") {
                 setmic("off");
                 audio.getAudioTracks().forEach((track: MediaStreamTrack) => track.stop());
@@ -98,7 +99,7 @@ function Toolbars(props: any) {
         }} className="toolicons">
             {micstate === "on" ? <BsMic size='20' />:  <BsMicMute size='20' />}
         </div>
-        <div ref={videoref} style={{ backgroundColor: "red" }} onClick={async() => {
+        <div title="camera" ref={videoref} style={{ backgroundColor: "red" }} onClick={async() => {
             if (videostate === "on") {
                 setvideostate("off");
                 video.getVideoTracks().forEach((track: MediaStreamTrack) => track.stop());
@@ -152,7 +153,7 @@ function Toolbars(props: any) {
             {videostate === "on" ? <BiVideo size='20' /> : <BiVideoOff size='20' />
        }
         </div>
-        <div className="toolicons" onClick={async () => 
+        <div title="Share Screen" ref={screenref} className="toolicons" onClick={async () => 
         {
             if (screenshare === "off") {
                 
@@ -160,12 +161,18 @@ function Toolbars(props: any) {
                     let stream = await navigator.mediaDevices.getDisplayMedia({
                         video: true
                     })
-                    // stream.getVideoTracks()[0].onended = ()=>{
-                    //     myscreen.current.querySelector('.userview').querySelector("video").srcObject = null;
-                    //     myscreen.current.style.display = "none";
-                    //     setscreenshare("off");
-                    //     dispatch(setscreen(null));
-                    // };
+                    stream.getVideoTracks()[0].onended = ()=>{
+                        myscreen.current.querySelector('.userview').querySelector("video").srcObject = null;
+                        myscreen.current.style.display = "none";
+                        dispatch(setscreen(null));
+                        setscreenshare("off");
+                        if (screenref.current) {
+                            screenref.current.style.backgroundColor = "rgb(92, 87, 87)";
+                        }
+                    };
+                    if (screenref.current) {
+                        screenref.current.style.backgroundColor = "#407fbf";
+                    }
                     dispatch(setscreen(stream));
                     setscreenshare("on");
                     myscreen.current.style.display="block";
@@ -181,12 +188,15 @@ function Toolbars(props: any) {
                 myscreen.current.querySelector('.userview').querySelector("video").srcObject=null;
                 myscreen.current.style.display="none";
                 dispatch(setscreen(null));
+                if(screenref.current){
+                    screenref.current.style.backgroundColor = "rgb(92, 87, 87)";
+                }
                 setscreenshare("off");
             }
         }}>
             {screenshare === "on" ? <TbScreenShare size='20' /> : <TbScreenShareOff size='20' /> }
         </div>
-        <div onClick={(e: any) => {
+        <div title="Raise Hand" onClick={(e: any) => {
             if (raisehand === "off") {
                 sethand("on")
                 e.currentTarget.style.backgroundColor = "#407fbf"
@@ -204,22 +214,22 @@ function Toolbars(props: any) {
         <div className="toolicons">
             <BsThreeDotsVertical size='20' />
         </div>
-        <div onClick={() => {
+        <div title="End Call" onClick={() => {
             socket.disconnect();
             navigate(`/end`, { replace: true });
 
         }} className="toolicons" style={{ borderRadius: "30px", width: "70px", backgroundColor: "red" }}>
             <MdCallEnd size='20'  />
         </div>
-        <div className="othertools" onClick={() => openclosepanel("panelpeople")}>
+        <div title="Participants" className="othertools" onClick={() => openclosepanel("panelpeople")}>
             <BsPeople size='20'  />
 
         </div>
-        <div className="othertools" onClick={() => openclosepanel("panelchat")} >
+        <div title="Chat" className="othertools" onClick={() => openclosepanel("panelchat")} >
             <BsChatLeftText size='20'  />
 
         </div>
-        <div className="othertools">
+        <div title="Admin Controls" className="othertools">
             <MdOutlineAdminPanelSettings size='20'  />
         </div>
     </div>
