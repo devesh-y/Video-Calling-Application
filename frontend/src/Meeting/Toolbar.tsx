@@ -74,26 +74,27 @@ function Toolbars(props: any) {
                 }
             }
             else {
-                let stream = await navigator.mediaDevices.getUserMedia({
-                    video: false, audio: true
-                });
-                dispatch(setaudio(stream));
-                setmic("on")
                 try {
+                    let stream = await navigator.mediaDevices.getUserMedia({
+                        video: false, audio: true
+                    });
                     console.log("sending audio");
+                    let audiotrack = stream.getAudioTracks()[0];
                     const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string | null>>);
                     array.forEach((data) => {
                         const peer: peerservice = data[0];
-                        let audiotrack = stream.getAudioTracks()[0];
                         console.log("track added");
                         peer.peer.addTrack(audiotrack, stream);
                     })
+                    dispatch(setaudio(stream));
+                    setmic("on");
+                    if (audioref.current) {
+                        audioref.current.style.backgroundColor = "rgb(92, 87, 87)";
+                    }
+
                 }
                 catch (error) {
                     console.log(error);
-                }
-                if (audioref.current) {
-                    audioref.current.style.backgroundColor = "rgb(92, 87, 87)";
                 }
             }
         }} className="toolicons">
@@ -134,10 +135,10 @@ function Toolbars(props: any) {
                 setvideostate("on")
                 try {
                     console.log("sending video");
+                    let videotrack = stream.getVideoTracks()[0];
                     const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string|null>>);
                     array.forEach((data) => {
                         const peer: peerservice = data[0];
-                        let videotrack = stream.getVideoTracks()[0];
                         console.log("track added");
                         peer.peer.addTrack(videotrack, stream);
                     })
@@ -147,7 +148,7 @@ function Toolbars(props: any) {
                 }
                 if (videoref.current) {
                     videoref.current.style.backgroundColor = "rgb(92, 87, 87)";
-                }
+                }    
             }
         }} className="toolicons">
             {videostate === "on" ? <BiVideo size='20' /> : <BiVideoOff size='20' />
@@ -169,14 +170,41 @@ function Toolbars(props: any) {
                         if (screenref.current) {
                             screenref.current.style.backgroundColor = "rgb(92, 87, 87)";
                         }
-                    };
-                    if (screenref.current) {
-                        screenref.current.style.backgroundColor = "#407fbf";
-                    }
+                        const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string | null>>);
+                        array.forEach((data) => {
+                            const peer: peerservice = data[0];
+                            const videosenders = peer.peer.getSenders().filter((sender) => {
+                                return sender.track && sender.track.kind === "video+screen";
+                            });
+                            try {
+                                videosenders.forEach((videosender) => {
+                                    console.log("sender found");
+                                    peer.peer.removeTrack(videosender as RTCRtpSender)
+                                })
+                            }
+                            catch (err) {
+                                console.log(err);
+                            }
+                        })
+                        socket.emit("stopscreen", code);
+                    }; 
                     dispatch(setscreen(stream));
                     setscreenshare("on");
                     myscreen.current.style.display="block";
-                    myscreen.current.querySelector('.userview').querySelector("video").srcObject=stream;              
+                    myscreen.current.querySelector('.userview').querySelector("video").srcObject=stream;   
+
+                    const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string | null>>);
+                    array.forEach((data) => {
+                        const peer: peerservice = data[0];
+                        let videotrack = stream.getVideoTracks()[0];
+                        console.log("track added");
+                        peer.peer.addTrack(videotrack, stream);
+                    })  
+                    if (screenref.current) {
+                        screenref.current.style.backgroundColor = "#407fbf";
+                    }     
+              
+
                     
                 } catch (error) {
 
@@ -192,6 +220,25 @@ function Toolbars(props: any) {
                     screenref.current.style.backgroundColor = "rgb(92, 87, 87)";
                 }
                 setscreenshare("off");
+                const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string | null>>);
+                array.forEach((data) => {
+                    const peer: peerservice = data[0];
+                    const videosenders = peer.peer.getSenders().filter((sender) => {
+                        console.log(sender);
+                        
+                        return sender.track && (sender.track.kind ==="video+screen");
+                    });
+                    try {
+                        videosenders.forEach((videosender) => {
+                            console.log("sender found");
+                            peer.peer.removeTrack(videosender as RTCRtpSender)
+                        })
+                    }
+                    catch (err) {
+                        console.log(err);
+                    }
+                })
+                socket.emit("stopscreen",code);
             }
         }}>
             {screenshare === "on" ? <TbScreenShare size='20' /> : <TbScreenShareOff size='20' /> }

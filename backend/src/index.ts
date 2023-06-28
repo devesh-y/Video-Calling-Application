@@ -13,7 +13,7 @@ const httpserver=http.createServer(app);
 
 const socketio = new Server(httpserver,{
     cors: {
-        origin: "https://crowdconnect.netlify.app"
+        origin: "*"
         // https://crowdconnect.netlify.app
     }
 });
@@ -91,6 +91,12 @@ socketio.on("connection", (socket) => {
     })
     socket.on("stopaudio",(code)=>{
         socket.to(code).emit("stopaudio",socket.id);
+    })
+    socket.on("stopscreen",(code)=>{
+        socket.to(code).emit("stopscreen", socket.id);
+    })
+    socket.on("trackinfo",({id,tracktype,code})=>{
+        socket.to(code).emit("trackinfo",{id,tracktype,from:socket.id});
     })
     //asking permission of host to enter
     socket.on("askhost",({code,name})=>{
