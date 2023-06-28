@@ -95,8 +95,11 @@ socketio.on("connection", (socket) => {
     socket.on("stopscreen",(code)=>{
         socket.to(code).emit("stopscreen", socket.id);
     })
-    socket.on("trackinfo",({id,tracktype,code})=>{
-        socket.to(code).emit("trackinfo",{id,tracktype,from:socket.id});
+    socket.on("trackinfo",({id,code})=>{
+        socket.to(code).emit("trackinfo",{id,from:socket.id});
+    })
+    socket.on("sendtrack",({id,from})=>{
+        socket.to(from).emit("sendtrack",{id,from:socket.id});
     })
     //asking permission of host to enter
     socket.on("askhost",({code,name})=>{

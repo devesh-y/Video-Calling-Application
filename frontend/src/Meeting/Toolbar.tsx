@@ -1,4 +1,4 @@
-import {  useContext, useRef, useState } from "react";
+import {  useContext, useRef, useState,useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import { useSelector, useDispatch } from "react-redux"
@@ -10,6 +10,7 @@ import { TbScreenShare, TbScreenShareOff } from "react-icons/tb";
 import { FaRegHandPaper } from "react-icons/fa";
 import { MdCallEnd, MdOutlineAdminPanelSettings } from "react-icons/md";
 import "./toolbar.css"
+import { Socket } from "socket.io-client";
 function Toolbars(props: any) {
     const {code}=useParams();
     const { myscreen} = props;
@@ -26,7 +27,26 @@ function Toolbars(props: any) {
     const remotestream = useSelector((state: any) => state.slice1.remotestream);
     const video=useSelector((state:any)=>state.slice1.video);
     const audio = useSelector((state: any) => state.slice1.audio);
+    const mapping:Map<Socket,peerservice> = useSelector((state: any) => state.slice1.mapping);
     const dispatch = useDispatch();
+    useEffect(()=>{
+        socket.on("sendtrack",(data:any)=>{
+            const { id,from}=data; 
+            if (screen && screen.getVideoTracks()[0].id === id){
+                console.log("sending screen");
+                let peer = mapping.get(from);
+                if (peer) {
+                    peer.peer.addTrack(screen.getVideoTracks()[0], screen);
+                }
+                
+            }
+            
+        })
+
+        return ()=>{
+            socket.off("sendtrack")
+        }
+    },[mapping,screen])
     function openclosepanel(option: string) {   
         if ((document.getElementById(option) as HTMLElement).style.right == "" || (document.getElementById(option) as HTMLElement).style.right == "-400px"){
             if(option==="panelchat"){
@@ -192,18 +212,11 @@ function Toolbars(props: any) {
                     setscreenshare("on");
                     myscreen.current.style.display="block";
                     myscreen.current.querySelector('.userview').querySelector("video").srcObject=stream;   
-
-                    const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string | null>>);
-                    array.forEach((data) => {
-                        const peer: peerservice = data[0];
-                        let videotrack = stream.getVideoTracks()[0];
-                        console.log("track added");
-                        peer.peer.addTrack(videotrack, stream);
-                    })  
+                    let videotrack = stream.getVideoTracks()[0];
                     if (screenref.current) {
                         screenref.current.style.backgroundColor = "#407fbf";
                     }     
-              
+                    socket.emit("trackinfo",{id:videotrack.id,code});
 
                     
                 } catch (error) {

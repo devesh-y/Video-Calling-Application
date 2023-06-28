@@ -8,7 +8,7 @@ import ReactPlayer from "react-player";
 import Toolbars from "./Toolbar";
 import Chatpanel from "./ChatPanel";
 import PeoplePanel from "./PeoplePanel";
-import { setremotescreen, setremotestream  } from "../ReduxStore/slice1";
+import { setremotescreen, setremotestream ,setmapping } from "../ReduxStore/slice1";
 import { Socket } from "socket.io-client";
 const Myvideo = memo((props: any) => {
     const { selfname, myscreen } = props;
@@ -84,6 +84,7 @@ const Videos = memo((props: any) => {
     const audio: MediaStream|null = useSelector((state: any) => state.slice1.audio);
     const screen:MediaStream|null= useSelector((state:any)=>state.slice1.screen);
     const peerscreens=useRef(new Map<peerservice,Array<MediaStream|string>>());
+    const trackid=useRef(new Set<string>());
     const dispatch=useDispatch();
     
     const addtrackfunc = useCallback((ev: any, peer: peerservice) => {
@@ -105,25 +106,31 @@ const Videos = memo((props: any) => {
         }
         else if(ev.track.kind==="video")
         {           
-            let stream = new MediaStream();
-            stream.addTrack(ev.track);
-            console.log("video track comes");
-            let arr = Array.from(peerstreams.current.get(peer) as Array<MediaStream | null | string>);
-            arr[0] = stream;
-            let newpeerstream = new Map(peerstreams.current);
-            newpeerstream.set(peer, arr);
-            peerstreams.current = newpeerstream;
-            dispatch(setremotestream(peerstreams.current));
-            // else if (ev.track.enabled === true){
-            //     let stream = new MediaStream();
-            //     stream.addTrack(ev.track);
-            //     console.log("screen track comes");
-            //     let remotename = (Array.from(peerstreams.current.get(peer) as Array<MediaStream | null | string>)[2] as string);
-            //     let newpeerscreen = new Map(peerscreens.current);
-            //     newpeerscreen.set(peer, [stream, remotename]);
-            //     peerscreens.current=newpeerscreen;
-            //     dispatch(setremotescreen(peerscreens.current));
-            // }
+            if(!trackid.current.has(ev.track.id)){
+                let stream = new MediaStream();
+                stream.addTrack(ev.track);
+                console.log("video track comes");
+                let arr = Array.from(peerstreams.current.get(peer) as Array<MediaStream | null | string>);
+                arr[0] = stream;
+                let newpeerstream = new Map(peerstreams.current);
+                newpeerstream.set(peer, arr);
+                peerstreams.current = newpeerstream;
+                dispatch(setremotestream(peerstreams.current));
+            }
+            else{
+                let stream = new MediaStream();
+                stream.addTrack(ev.track);
+                console.log("screen track comes");
+                let remotename = (Array.from(peerstreams.current.get(peer) as Array<MediaStream | null | string>)[2] as string);
+                let newpeerscreen = new Map(peerscreens.current);
+                newpeerscreen.set(peer, [stream, remotename]);
+                peerscreens.current=newpeerscreen;
+                dispatch(setremotescreen(peerscreens.current));
+
+                let newtrackid=new Set(trackid.current);
+                newtrackid.delete(ev.track.id);
+                trackid.current=newtrackid;
+            }
         }
 
     }, [])
@@ -145,7 +152,7 @@ const Videos = memo((props: any) => {
         let newmapping=new Map(mapping.current);
         newmapping.set(from, peer);
         mapping.current=newmapping;
-        
+        dispatch(setmapping(mapping.current));
         //answer this offer 
         try {
             const myanswer = await peer.getanswer(offer);
@@ -207,6 +214,7 @@ const Videos = memo((props: any) => {
         let newmapping = new Map(mapping.current);
         newmapping.set(to, peer);
         mapping.current = newmapping;
+        dispatch(setmapping(mapping.current));
 
         try {
             const offer = await peer.getoffer();
@@ -254,7 +262,13 @@ const Videos = memo((props: any) => {
             dispatch(setremotescreen(peerscreens.current));
         }
     }, [])
-
+    const trackinfofunc=useCallback((data:any)=>{
+        const { id,from }=data;
+        let newtrackid=new Set(trackid.current);
+        newtrackid.add(id);
+        trackid.current=newtrackid;
+        socket.emit("sendtrack",{id,from})
+    },[])
     const peernegoneedfunc = useCallback(async (data:any) => {
         const { from, offer }=data;
         console.log("nego offer comes");
@@ -294,6 +308,7 @@ const Videos = memo((props: any) => {
             let newmapping=new Map(mapping.current);
             newmapping.delete(from);
             mapping.current=newmapping;
+            dispatch(setmapping(mapping.current));
             let temppeerstream= new Map(peerstreams.current);
             temppeerstream.delete(peer);
             peerstreams.current=temppeerstream;
@@ -354,6 +369,7 @@ const Videos = memo((props: any) => {
         socket.on("stopaudio", stopaudiofunc)
         socket.on("stopscreen", stopscreenfunc)
         socket.on("disconnectuser", disconnectuserfunc);
+        socket.on("trackinfo",trackinfofunc);
 
     }, [])
 
