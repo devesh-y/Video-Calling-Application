@@ -23,17 +23,17 @@ const Myvideo = memo((props: any) => {
     return <>
         <div className="usergrid" >
             <div className="userview">
-                {video === null ? <div className="avatar" style={{ backgroundColor: `${mycolor}` }}>{selfname[0]} </div> : <ReactPlayer playing={true} muted={true} url={video} height="120px" />}
+                {video === null ? <div className="avatar" style={{ backgroundColor: `${mycolor}` }}>{selfname[0]} </div> : <ReactPlayer playing={true} muted={true} url={video} width="100%" height="100%"/>}
             </div>
             <div className="usertitle" >{selfname}</div>
         </div>
         
         <div className="usergrid" ref={myscreen} style={{display:"none"}} >
             <div className="userview">
-                <video autoPlay height="120px" >
+                <video autoPlay  width="100%" height="100%">
                 </video>
             </div>
-            <div className="usertitle" >{selfname}</div>
+            <div className="usertitle" >{selfname}'s Screen</div>
         </div>
         
         
@@ -49,7 +49,7 @@ const Participants = memo(() => {
             const randomNumber = (Math.floor(Math.random() * 10))%9 + 1;
             return <div key={index} className="usergrid">
                 <div className="userview">
-                    {(data[0] == null || data[0]==undefined ||data[0]===null) ? <div className="avatar" style={{backgroundColor:`${colors[randomNumber]}`}}>{(data[2] as string)[0]} </div> : <ReactPlayer  playing={true} muted={true} url={data[0]} height="120px" />}
+                    {(data[0] == null || data[0] == undefined || data[0] === null) ? <div className="avatar" style={{ backgroundColor: `${colors[randomNumber]}` }}>{(data[2] as string)[0]} </div> : <ReactPlayer playing={true} muted={true} url={data[0]} height="100%" width="100%" />}
                     {data[1] != null && <ReactPlayer  playing={true} muted={false} url={data[1]} width="0px" height="0px" />}
                 </div>
                 <div className="usertitle" >{data[2] as string}</div>
@@ -65,7 +65,7 @@ const Screens= memo(()=>{
         {Array.from(remotescreens as Map<peerservice, Array<string | MediaStream>>).map(([_peer, data], index) => {
             return <div key={index} className="usergrid">
                 <div className="userview">
-                    <ReactPlayer playing={true} muted={true} url={data[0]} height="120px" />
+                    <ReactPlayer playing={true} muted={true} url={data[0]} height="100%" width="100%" />
                 </div>
                 <div className="usertitle" >{data[1] as string}'s Screen</div>
             </div>

@@ -59,14 +59,3 @@
 .panelpeoname {
     flex: 1 1 100%;
 }
-
-
-.avatar {
-    color: black;
-    width: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-    border-radius: 50%;
-}
