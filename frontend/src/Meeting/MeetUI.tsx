@@ -89,7 +89,9 @@ const Videos = memo((props: any) => {
     
     const addtrackfunc = useCallback((ev: any, peer: peerservice) => {
         if(!tracknumber.current.get(peer)){
-            tracknumber.current.set(peer,1);
+            let newtracknumber = new Map(tracknumber.current);
+            newtracknumber.set(peer, 1);
+            tracknumber.current = newtracknumber;
             return;
         }
         
@@ -106,7 +108,11 @@ const Videos = memo((props: any) => {
         }
         else if(ev.track.kind==="video")
         {           
-            if(!trackid.current.has(ev.track.id)){
+            console.log("track reached with id =",ev.track.id);
+            console.log(trackid.current);
+            
+            
+            if(!(trackid.current.has(ev.track.id)) ){
                 let stream = new MediaStream();
                 stream.addTrack(ev.track);
                 console.log("video track comes");
@@ -193,7 +199,9 @@ const Videos = memo((props: any) => {
                     const mytrack = mystream.getAudioTracks()[0];
 
                     peer.peer.addTrack(mytrack, mystream)
-                    tracknumber.current.set(peer,1);
+                    let newtracknumber=new Map(tracknumber.current);
+                    newtracknumber.set(peer,1);
+                    tracknumber.current=newtracknumber;
                 })
                 .catch(error => console.error('Error decoding audio data:', error));
         }
@@ -231,6 +239,8 @@ const Videos = memo((props: any) => {
             if(peerstreams.current.get(peer)){
                 let arr= Array.from(peerstreams.current.get(peer) as Array<MediaStream|string|null>);
                 arr[0]=null;
+                console.log("video stoped");
+                
                 let newpeerstream = new Map(peerstreams.current);
                 newpeerstream.set(peer, arr);
                 peerstreams.current = newpeerstream;
@@ -246,6 +256,8 @@ const Videos = memo((props: any) => {
             if (peerstreams.current.get(peer)) {
                 let arr = Array.from(peerstreams.current.get(peer) as Array<MediaStream | string | null>);
                 arr[1] = null;
+                console.log("audio stopped");
+                
                 let newpeerstream = new Map(peerstreams.current);
                 newpeerstream.set(peer,arr);
                 peerstreams.current=newpeerstream;
@@ -259,6 +271,8 @@ const Videos = memo((props: any) => {
             let newpeerscreen=new Map(peerscreens.current);
             newpeerscreen.delete(peer);
             peerscreens.current=newpeerscreen;
+            console.log("screen stopped");
+            
             dispatch(setremotescreen(peerscreens.current));
         }
     }, [])
@@ -268,6 +282,10 @@ const Videos = memo((props: any) => {
         newtrackid.add(id);
         trackid.current=newtrackid;
         socket.emit("sendtrack",{id,from})
+        console.log("track id comes");
+        
+        console.log(trackid.current);
+        
     },[])
     const peernegoneedfunc = useCallback(async (data:any) => {
         const { from, offer }=data;

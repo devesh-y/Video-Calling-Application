@@ -23,7 +23,7 @@ function Toolbars(props: any) {
     const [screenshare, setscreenshare] = useState("off");
     const navigate = useNavigate();
     const socket = useContext(SocketContext);
-    const screen=useSelector((state:any)=>state.slice1.screen);
+    const screen:MediaStream=useSelector((state:any)=>state.slice1.screen);
     const remotestream = useSelector((state: any) => state.slice1.remotestream);
     const video=useSelector((state:any)=>state.slice1.video);
     const audio = useSelector((state: any) => state.slice1.audio);
@@ -33,9 +33,11 @@ function Toolbars(props: any) {
         socket.on("sendtrack",(data:any)=>{
             const { id,from}=data; 
             if (screen && screen.getVideoTracks()[0].id === id){
-                console.log("sending screen");
+                console.log("sending screen of id ",id);
                 let peer = mapping.get(from);
                 if (peer) {
+                    console.log("screen track added");
+                    
                     peer.peer.addTrack(screen.getVideoTracks()[0], screen);
                 }
                 
@@ -68,7 +70,7 @@ function Toolbars(props: any) {
         <div title="mic" ref={audioref} style={{ backgroundColor: "red" }} onClick={async() => {
             if (micstate === "on") {
                 setmic("off");
-                audio.getAudioTracks().forEach((track: MediaStreamTrack) => track.stop());
+                
                 const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string | null>>);
                 array.forEach((data) => {
                     const peer: peerservice = data[0];
@@ -88,6 +90,7 @@ function Toolbars(props: any) {
 
                 })
                 socket.emit("stopaudio", code);
+                audio.getAudioTracks().forEach((track: MediaStreamTrack) => track.stop());
                 dispatch(setaudio(null));
                 if (audioref.current) {
                     audioref.current.style.backgroundColor = "red";
@@ -122,13 +125,14 @@ function Toolbars(props: any) {
         </div>
         <div title="camera" ref={videoref} style={{ backgroundColor: "red" }} onClick={async() => {
             if (videostate === "on") {
+                const id =(screen!=null)? screen.getVideoTracks()[0].id : "abc";                
                 setvideostate("off");
-                video.getVideoTracks().forEach((track: MediaStreamTrack) => track.stop());
+                
                 const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string|null>>);
                 array.forEach((data) => {
                     const peer: peerservice = data[0];
                     const videosenders = peer.peer.getSenders().filter((sender) => {
-                        return sender.track && sender.track.kind === "video";
+                        return sender.track && sender.track.kind === "video" && (sender.track.id!=id);
                     });
                     try {
                         videosenders.forEach((videosender) => {
@@ -140,11 +144,13 @@ function Toolbars(props: any) {
                         console.log(err);
                     }
                 })
-                socket.emit("stopvideo",code);
+                
+                video.getVideoTracks().forEach((track: MediaStreamTrack) => track.stop());
                 dispatch(setvideo(null));
                 if (videoref.current){
                     videoref.current.style.backgroundColor = "red";
                 }
+                socket.emit("stopvideo", code);
                 
             }
             else {
@@ -182,19 +188,20 @@ function Toolbars(props: any) {
                     let stream = await navigator.mediaDevices.getDisplayMedia({
                         video: true
                     })
+                    const id = stream.getVideoTracks()[0].id;
                     stream.getVideoTracks()[0].onended = ()=>{
                         myscreen.current.querySelector('.userview').querySelector("video").srcObject = null;
                         myscreen.current.style.display = "none";
-                        dispatch(setscreen(null));
-                        setscreenshare("off");
+
                         if (screenref.current) {
                             screenref.current.style.backgroundColor = "rgb(92, 87, 87)";
                         }
+                        setscreenshare("off");
                         const array = Array.from(remotestream as Map<peerservice, Array<MediaStream | string | null>>);
                         array.forEach((data) => {
                             const peer: peerservice = data[0];
                             const videosenders = peer.peer.getSenders().filter((sender) => {
-                                return sender.track && sender.track.kind === "video+screen";
+                                return sender.track && (sender.track.kind === "video") && sender.track.id === id;
                             });
                             try {
                                 videosenders.forEach((videosender) => {
@@ -206,6 +213,7 @@ function Toolbars(props: any) {
                                 console.log(err);
                             }
                         })
+                        dispatch(setscreen(null));
                         socket.emit("stopscreen", code);
                     }; 
                     dispatch(setscreen(stream));
@@ -225,10 +233,11 @@ function Toolbars(props: any) {
                 }
             }
             else {
-                screen.getVideoTracks().forEach((track:MediaStreamTrack) => track.stop());
+                const id = screen.getVideoTracks()[0].id;
+            
                 myscreen.current.querySelector('.userview').querySelector("video").srcObject=null;
                 myscreen.current.style.display="none";
-                dispatch(setscreen(null));
+                
                 if(screenref.current){
                     screenref.current.style.backgroundColor = "rgb(92, 87, 87)";
                 }
@@ -237,9 +246,7 @@ function Toolbars(props: any) {
                 array.forEach((data) => {
                     const peer: peerservice = data[0];
                     const videosenders = peer.peer.getSenders().filter((sender) => {
-                        console.log(sender);
-                        
-                        return sender.track && (sender.track.kind ==="video+screen");
+                        return sender.track && (sender.track.kind ==="video") && sender.track.id===id;
                     });
                     try {
                         videosenders.forEach((videosender) => {
@@ -251,6 +258,8 @@ function Toolbars(props: any) {
                         console.log(err);
                     }
                 })
+                screen.getVideoTracks().forEach((track: MediaStreamTrack) => track.stop());
+                dispatch(setscreen(null));
                 socket.emit("stopscreen",code);
             }
         }}>
