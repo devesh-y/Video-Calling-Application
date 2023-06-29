@@ -278,13 +278,19 @@ const Videos = memo((props: any) => {
     }, [])
     const trackinfofunc=useCallback((data:any)=>{
         const { id,from }=data;
-        let newtrackid=new Set(trackid.current);
-        newtrackid.add(id);
-        trackid.current=newtrackid;
-        socket.emit("sendtrack",{id,from})
-        console.log("track id comes");
+        let peer=mapping.current.get(from);
+        if(peer){
+            if(!peerscreens.current.get(peer)){
+                let newtrackid = new Set(trackid.current);
+                newtrackid.add(id);
+                trackid.current = newtrackid;
+                socket.emit("sendtrack", { id, from })
+                console.log("track id comes");
+
+                console.log(trackid.current);
+            }
+        }
         
-        console.log(trackid.current);
         
     },[])
     const peernegoneedfunc = useCallback(async (data:any) => {
@@ -365,7 +371,7 @@ const Videos = memo((props: any) => {
             if(screen!=null){
                 setTimeout(() => {
                     const track = screen.getVideoTracks()[0];
-                    peer.peer.addTrack(track, screen);
+                    socket.emit("trackinfo", { id: track.id, code });
                 }, 1000);
             }
         }
