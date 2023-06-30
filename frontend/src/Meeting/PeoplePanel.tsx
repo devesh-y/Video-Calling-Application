@@ -18,7 +18,7 @@ const PeoplePanel = memo((props: any) => {
             </div>
             {Array.from(remotestream as Map<peerservice, Array<string | MediaStream>>).map(([_peer, data], index) => {
                 const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
-                const randomNumber = (Math.floor(Math.random() * 10)) % 9 + 1;
+                const randomNumber = (Math.floor(Math.random() * 10)) % 9 ;
                 return <div key={index} className="userdetails">
                     <div className="avatar" style={{ backgroundColor: `${colors[randomNumber]}` }}>{(data[2] as string)[0]}</div>
                     <div className="panelpeoname">{data[2] as string}</div>

@@ -19,7 +19,7 @@ const Myvideo = memo((props: any) => {
     const dispatch=useDispatch();
     useEffect(()=>{
         const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
-        const randomNumber = (Math.floor(Math.random() * 10)) % 9 + 1;
+        const randomNumber = (Math.floor(Math.random() * 10)) % 9;
         setcolor(colors[randomNumber]);
     },[])
 
@@ -70,7 +70,7 @@ const Participants = memo((props:any) => {
     return <>
         {arr.map(([peer, data], index) => {
             const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
-            const randomNumber = (Math.floor(Math.random() * 10))%9 + 1;
+            const randomNumber = (Math.floor(Math.random() * 10))%9 ;
             return <div key={index} className="usergrid">
                 <div className="userview">
                     <div className="pinicon" onClick={()=>{
