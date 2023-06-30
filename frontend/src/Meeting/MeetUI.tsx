@@ -63,13 +63,18 @@ const Myvideo = memo((props: any) => {
 const Participants = memo(() => {
 
     const remotestream=useSelector((state:any)=>state.slice1.remotestream);
+    const arr = Array.from(remotestream as Map<peerservice, Array<string | MediaStream | null>>);
+    const dispatch=useDispatch();
     return <>
-        {Array.from(remotestream as Map<peerservice, Array<string | MediaStream | null>>).map(([_peer, data], index) => {
+        {arr.map(([_peer, data], index) => {
             const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
             const randomNumber = (Math.floor(Math.random() * 10))%9 + 1;
             return <div key={index} className="usergrid">
                 <div className="userview">
-                    <div className="pinicon">
+                    <div className="pinicon" onClick={()=>{
+                        dispatch(setpinvideo(data[0]));
+                        dispatch(setpinname(data[2]));
+                    }}>
                         <BsPinAngleFill size='20' />
                     </div>
                     {(data[0] == null || data[0] == undefined || data[0] === null) ? <div className="avatar" style={{ backgroundColor: `${colors[randomNumber]}` }}>{(data[2] as string)[0]} </div> : <ReactPlayer playing={true} muted={true} url={data[0]} height="100%" width="100%" />}
@@ -84,11 +89,16 @@ const Participants = memo(() => {
 
 const Screens= memo(()=>{
     const remotescreens=useSelector((state:any)=>state.slice1.remotescreens);
+    const arr = Array.from(remotescreens as Map<peerservice, Array<string | MediaStream>>)
+    const dispatch=useDispatch();
     return <>
-        {Array.from(remotescreens as Map<peerservice, Array<string | MediaStream>>).map(([_peer, data], index) => {
+        {arr.map(([_peer, data], index) => {
             return <div key={index} className="usergrid">
                 <div className="userview">
-                    <div className="pinicon">
+                    <div className="pinicon" onClick={()=>{
+                        dispatch(setpinvideo(data[0]));
+                        dispatch(setpinname(data[1]+'\'Screen'))
+                    }}>
                         <BsPinAngleFill size='20' />
                     </div>
                     <ReactPlayer playing={true} muted={true} url={data[0]} height="100%" width="100%" />
@@ -427,6 +437,10 @@ const Videos = memo((props: any) => {
     }, [])
 
     useEffect(()=>{
+        if (pinvideo?.getVideoTracks()[0].readyState==="ended"){
+            dispatch(setpinvideo(null));
+            dispatch(setpinname("You"));
+        }
         //getting answers
         socket.on("sendAnswer", gettinganswerfunc);
         return ()=>{
