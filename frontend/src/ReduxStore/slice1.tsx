@@ -11,6 +11,8 @@ const slice1=createSlice({
         video:null,
         audio:null,
         screen:null,
+        pinvideo:null,
+        pinname:"You"
 
     },
     reducers:{
@@ -33,8 +35,14 @@ const slice1=createSlice({
         setmapping: (state, action) => {
             state.mapping = action.payload
         },
+        setpinname:(state,action)=>{
+            state.pinname=action.payload
+        },
+        setpinvideo:(state,action)=>{
+            state.pinvideo=action.payload
+        }
     }
 });
 
-export const { setremotescreen,setremotestream,setscreen,setvideo,setaudio,setmapping}=slice1.actions;
+export const { setremotescreen,setremotestream,setscreen,setvideo,setaudio,setmapping,setpinname,setpinvideo}=slice1.actions;
 export const reducer1=slice1.reducer;

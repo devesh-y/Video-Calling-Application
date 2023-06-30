@@ -4,16 +4,15 @@ import { SocketContext } from "../Socket/SocketClient";
 import { useSelector, useDispatch } from "react-redux"
 import { peerservice } from "../WebRTC/p2p";
 import { setscreen ,setvideo,setaudio} from "../ReduxStore/slice1";
-import { BsMic, BsMicMute, BsThreeDotsVertical, BsPeople, BsChatLeftText } from "react-icons/bs";
+import { BsMic, BsMicMute, BsPeople, BsChatLeftText } from "react-icons/bs";
 import { BiVideoOff, BiVideo } from "react-icons/bi";
 import { TbScreenShare, TbScreenShareOff } from "react-icons/tb";
 import { FaRegHandPaper } from "react-icons/fa";
-import { MdCallEnd, MdOutlineAdminPanelSettings } from "react-icons/md";
+import { MdCallEnd } from "react-icons/md";
 import "./toolbar.css"
 import { Socket } from "socket.io-client";
-function Toolbars(props: any) {
+function Toolbars() {
     const {code}=useParams();
-    const { myscreen} = props;
     const videoref=useRef<HTMLDivElement| null>(null);
     const audioref=useRef<HTMLDivElement| null>(null);
     const screenref = useRef<HTMLDivElement | null>(null);
@@ -190,8 +189,7 @@ function Toolbars(props: any) {
                     })
                     const id = stream.getVideoTracks()[0].id;
                     stream.getVideoTracks()[0].onended = ()=>{
-                        myscreen.current.querySelector('.userview').querySelector("video").srcObject = null;
-                        myscreen.current.style.display = "none";
+                  
 
                         if (screenref.current) {
                             screenref.current.style.backgroundColor = "rgb(92, 87, 87)";
@@ -218,8 +216,6 @@ function Toolbars(props: any) {
                     }; 
                     dispatch(setscreen(stream));
                     setscreenshare("on");
-                    myscreen.current.style.display="block";
-                    myscreen.current.querySelector('.userview').querySelector("video").srcObject=stream;   
                     let videotrack = stream.getVideoTracks()[0];
                     if (screenref.current) {
                         screenref.current.style.backgroundColor = "#407fbf";
@@ -235,8 +231,6 @@ function Toolbars(props: any) {
             else {
                 const id = screen.getVideoTracks()[0].id;
             
-                myscreen.current.querySelector('.userview').querySelector("video").srcObject=null;
-                myscreen.current.style.display="none";
                 
                 if(screenref.current){
                     screenref.current.style.backgroundColor = "rgb(92, 87, 87)";
@@ -280,9 +274,9 @@ function Toolbars(props: any) {
  
 
         </div>
-        <div className="toolicons">
+        {/* <div className="toolicons">
             <BsThreeDotsVertical size='20' />
-        </div>
+        </div> */}
         <div title="End Call" onClick={() => {
             socket.disconnect();
             navigate(`/end`, { replace: true });
@@ -298,9 +292,9 @@ function Toolbars(props: any) {
             <BsChatLeftText size='20'  />
 
         </div>
-        <div title="Admin Controls" className="othertools">
+        {/* <div title="Admin Controls" className="othertools">
             <MdOutlineAdminPanelSettings size='20'  />
-        </div>
+        </div> */}
     </div>
 }
 export default Toolbars;

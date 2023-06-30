@@ -8,12 +8,15 @@ import ReactPlayer from "react-player";
 import Toolbars from "./Toolbar";
 import Chatpanel from "./ChatPanel";
 import PeoplePanel from "./PeoplePanel";
-import { setremotescreen, setremotestream ,setmapping } from "../ReduxStore/slice1";
+import { BsPinAngleFill } from "react-icons/bs";
+import { setremotescreen, setremotestream ,setmapping,setpinname,setpinvideo } from "../ReduxStore/slice1";
 import { Socket } from "socket.io-client";
 const Myvideo = memo((props: any) => {
-    const { selfname, myscreen } = props;
-    const video=useSelector((state:any)=>state.slice1.video);
+    const { selfname } = props;
+    const video:MediaStream|null=useSelector((state:any)=>state.slice1.video);
     const [mycolor,setcolor]=useState("green");
+    const screen:MediaStream|null=useSelector((state:any)=>state.slice1.screen);
+    const dispatch=useDispatch();
     useEffect(()=>{
         const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
         const randomNumber = (Math.floor(Math.random() * 10)) % 9 + 1;
@@ -23,18 +26,35 @@ const Myvideo = memo((props: any) => {
     return <>
         <div className="usergrid" >
             <div className="userview">
-                {video === null ? <div className="avatar" style={{ backgroundColor: `${mycolor}` }}>{selfname[0]} </div> : <ReactPlayer playing={true} muted={true} url={video} width="100%" height="100%"/>}
+                <div className="pinicon" onClick={()=>{
+                        dispatch(setpinvideo(video));
+                        dispatch(setpinname("You"))
+                    }}>
+                    <BsPinAngleFill size='20'/>
+                </div>
+                {video === null ? <div className="avatar" style={{ backgroundColor: `${mycolor}` }}>{selfname[0]} </div> : <ReactPlayer playing={true} muted={true} url={video} 
+                width="100%" height="100%"/>}
             </div>
             <div className="usertitle" >{selfname}</div>
         </div>
-        
-        <div className="usergrid" ref={myscreen} style={{display:"none"}} >
-            <div className="userview">
-                <video autoPlay  width="100%" height="100%">
-                </video>
+        {
+           ( screen != null )? 
+            <div className="usergrid"  >
+                <div className="userview">
+                    <div className="pinicon" onClick={() => {
+                
+                        dispatch(setpinvideo(screen))
+                        dispatch(setpinname('Your Screen'))
+                    }}>
+                        <BsPinAngleFill size='20' />
+                    </div>
+                        <ReactPlayer playing={true} muted={true} url={screen} height="100%" width="100%"/>
+                </div>
+                <div className="usertitle" >Your Screen</div>
             </div>
-            <div className="usertitle" >{selfname}'s Screen</div>
-        </div>
+            : <></>
+        }
+        
         
         
     </> 
@@ -49,6 +69,9 @@ const Participants = memo(() => {
             const randomNumber = (Math.floor(Math.random() * 10))%9 + 1;
             return <div key={index} className="usergrid">
                 <div className="userview">
+                    <div className="pinicon">
+                        <BsPinAngleFill size='20' />
+                    </div>
                     {(data[0] == null || data[0] == undefined || data[0] === null) ? <div className="avatar" style={{ backgroundColor: `${colors[randomNumber]}` }}>{(data[2] as string)[0]} </div> : <ReactPlayer playing={true} muted={true} url={data[0]} height="100%" width="100%" />}
                     {data[1] != null && <ReactPlayer  playing={true} muted={false} url={data[1]} width="0px" height="0px" />}
                 </div>
@@ -65,6 +88,9 @@ const Screens= memo(()=>{
         {Array.from(remotescreens as Map<peerservice, Array<string | MediaStream>>).map(([_peer, data], index) => {
             return <div key={index} className="usergrid">
                 <div className="userview">
+                    <div className="pinicon">
+                        <BsPinAngleFill size='20' />
+                    </div>
                     <ReactPlayer playing={true} muted={true} url={data[0]} height="100%" width="100%" />
                 </div>
                 <div className="usertitle" >{data[1] as string}'s Screen</div>
@@ -74,7 +100,7 @@ const Screens= memo(()=>{
 })
 
 const Videos = memo((props: any) => {
-    const { selfname, myscreen} = props;
+    const { selfname} = props;
     const { code } = useParams();
     const socket = useContext(SocketContext);
     const tracknumber=useRef(new Map<peerservice,number>());
@@ -85,6 +111,9 @@ const Videos = memo((props: any) => {
     const screen:MediaStream|null= useSelector((state:any)=>state.slice1.screen);
     const peerscreens=useRef(new Map<peerservice,Array<MediaStream|string>>());
     const trackid=useRef(new Set<string>());
+    const pinscreenref =useRef<HTMLVideoElement | null>(null);
+    const pinvideo:MediaStream|null=useSelector((state:any)=>state.slice1.pinvideo);
+    const pinname:string=useSelector((state:any)=>state.slice1.pinname);
     const dispatch=useDispatch();
     
     const addtrackfunc = useCallback((ev: any, peer: peerservice) => {
@@ -405,20 +434,33 @@ const Videos = memo((props: any) => {
         }
     },[video,audio,screen])
 
-
+    useEffect(()=>{
+        if(pinscreenref.current){
+            pinscreenref.current.srcObject = pinvideo as MediaStream;
+        }
+        
+    },[pinvideo])
 
     return <div id="crowdmeet">
         <PeoplePanel selfname={selfname} />
-        <Myvideo selfname={selfname} myscreen={myscreen}  />
-        <Participants />
-        <Screens />
+        <div id="pin-screen">
+            <div className="userview">
+                {pinvideo === null ? <div className="avatar" style={{ backgroundColor: `green` }}>{pinname[0]} </div> : <video ref={pinscreenref}  autoPlay muted  height={400} />}
+            </div>
+            <div className="usertitle" >{pinname}</div>
+        </div>
+        <div id="side-screen">
+            <Myvideo selfname={selfname}/>
+            <Participants />
+            <Screens />
+        </div>
+        
     </div>
 })
 
 const MeetUI = (props: any) => {
     const { selfname } = props;
     const [askers, setaskers] = useState(new Map());
-    const myscreen=useRef(null);
     const socket = useContext(SocketContext);
     useEffect(() => {
         socket.on("askhost", ({ name, to }) => {
@@ -457,8 +499,8 @@ const MeetUI = (props: any) => {
             </div>
         }
         <Chatpanel selfname={selfname}/>
-        <Videos selfname={selfname} myscreen={myscreen} />
-        <Toolbars myscreen={myscreen} />
+        <Videos selfname={selfname}/>
+        <Toolbars  />
     </div>
 }
 
