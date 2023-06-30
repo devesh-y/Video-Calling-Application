@@ -1,7 +1,9 @@
 #toolbar {
     cursor: default;
     color: white;
-    flex-basis:70px;
+    flex-basis:50px;
+    min-height: 50px;
+    max-height: 50px;
     display: flex;
     justify-content: center;
     gap: 20px;
