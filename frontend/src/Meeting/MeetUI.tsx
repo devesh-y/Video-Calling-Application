@@ -12,7 +12,7 @@ import { BsPinAngleFill } from "react-icons/bs";
 import { setremotescreen, setremotestream ,setmapping,setpinname,setpinvideo } from "../ReduxStore/slice1";
 import { Socket } from "socket.io-client";
 const Myvideo = memo((props: any) => {
-    const { selfname } = props;
+    const { selfname,pinscreenid } = props;
     const video:MediaStream|null=useSelector((state:any)=>state.slice1.video);
     const [mycolor,setcolor]=useState("green");
     const screen:MediaStream|null=useSelector((state:any)=>state.slice1.screen);
@@ -29,6 +29,7 @@ const Myvideo = memo((props: any) => {
                 <div className="pinicon" onClick={()=>{
                         dispatch(setpinvideo(video));
                         dispatch(setpinname("You"))
+                        pinscreenid.current=[-1,-1];
                     }}>
                     <BsPinAngleFill size='20'/>
                 </div>
@@ -45,6 +46,7 @@ const Myvideo = memo((props: any) => {
                 
                         dispatch(setpinvideo(screen))
                         dispatch(setpinname('Your Screen'))
+                        pinscreenid.current = [-1,-1];
                     }}>
                         <BsPinAngleFill size='20' />
                     </div>
@@ -60,18 +62,19 @@ const Myvideo = memo((props: any) => {
     </> 
 
 });
-const Participants = memo(() => {
-
+const Participants = memo((props:any) => {
+    const {pinscreenid}=props;
     const remotestream=useSelector((state:any)=>state.slice1.remotestream);
     const arr = Array.from(remotestream as Map<peerservice, Array<string | MediaStream | null>>);
     const dispatch=useDispatch();
     return <>
-        {arr.map(([_peer, data], index) => {
+        {arr.map(([peer, data], index) => {
             const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
             const randomNumber = (Math.floor(Math.random() * 10))%9 + 1;
             return <div key={index} className="usergrid">
                 <div className="userview">
                     <div className="pinicon" onClick={()=>{
+                        pinscreenid.current = [peer,0];
                         dispatch(setpinvideo(data[0]));
                         dispatch(setpinname(data[2]));
                     }}>
@@ -87,15 +90,17 @@ const Participants = memo(() => {
     </>
 })
 
-const Screens= memo(()=>{
+const Screens= memo((props:any)=>{
+    const { pinscreenid } = props;
     const remotescreens=useSelector((state:any)=>state.slice1.remotescreens);
     const arr = Array.from(remotescreens as Map<peerservice, Array<string | MediaStream>>)
     const dispatch=useDispatch();
     return <>
-        {arr.map(([_peer, data], index) => {
+        {arr.map(([peer, data], index) => {
             return <div key={index} className="usergrid">
                 <div className="userview">
                     <div className="pinicon" onClick={()=>{
+                        pinscreenid.current = [peer,1];
                         dispatch(setpinvideo(data[0]));
                         dispatch(setpinname(data[1]+'\'Screen'))
                     }}>
@@ -125,7 +130,7 @@ const Videos = memo((props: any) => {
     const pinvideo:MediaStream|null=useSelector((state:any)=>state.slice1.pinvideo);
     const pinname:string=useSelector((state:any)=>state.slice1.pinname);
     const dispatch=useDispatch();
-    
+    const pinscreenid=useRef<Array<peerservice|number>>([-1,-1]);
     const addtrackfunc = useCallback((ev: any, peer: peerservice) => {
         if(!tracknumber.current.get(peer)){
             let newtracknumber = new Map(tracknumber.current);
@@ -284,6 +289,11 @@ const Videos = memo((props: any) => {
                 newpeerstream.set(peer, arr);
                 peerstreams.current = newpeerstream;
                 dispatch(setremotestream(peerstreams.current));
+
+                if(pinscreenid.current[0]===peer && pinscreenid.current[1]===0){
+                    dispatch(setpinvideo(null));
+                    dispatch(setpinname("You"));
+                }
             }
         }
         
@@ -313,6 +323,10 @@ const Videos = memo((props: any) => {
             console.log("screen stopped");
             
             dispatch(setremotescreen(peerscreens.current));
+            if (pinscreenid.current[0] === peer && pinscreenid.current[1] === 1) {
+                dispatch(setpinvideo(null));
+                dispatch(setpinname("You"));
+            }
         }
     }, [])
     const trackinfofunc=useCallback((data:any)=>{
@@ -380,6 +394,10 @@ const Videos = memo((props: any) => {
             temppeerscreens.delete(peer);
             peerscreens.current=temppeerscreens;
             dispatch(setremotescreen(peerscreens.current));
+            if (pinscreenid.current[0] === peer) {
+                dispatch(setpinvideo(null));
+                dispatch(setpinname("You"));
+            }
             
         }
     },[])
@@ -464,9 +482,9 @@ const Videos = memo((props: any) => {
             <div className="usertitle" >{pinname}</div>
         </div>
         <div id="side-screen">
-            <Myvideo selfname={selfname}/>
-            <Participants />
-            <Screens />
+            <Myvideo selfname={selfname} pinscreenid={pinscreenid}/>
+            <Participants pinscreenid={pinscreenid} />
+            <Screens pinscreenid={pinscreenid} />
         </div>
         
     </div>
