@@ -1,18 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { peerservice } from "../WebRTC/p2p";
-import { Socket } from "socket.io-client";
 
 const slice1=createSlice({
     name:"slice1",
     initialState:{
-        mapping: new Map<Socket,peerservice>(),
+        mapping: new Map<string,peerservice>(),
         remotestream: new Map<peerservice, Array<string | MediaStream | null>>(),
         remotescreens: new Map<peerservice, Array<MediaStream|string>>(),
         video:null,
         audio:null,
         screen:null,
         pinvideo:null,
-        pinname:"You"
+        pinname:"You",
+        hands: new Map<string,string>()
 
     },
     reducers:{
@@ -40,9 +40,12 @@ const slice1=createSlice({
         },
         setpinvideo:(state,action)=>{
             state.pinvideo=action.payload
+        },
+        sethands:(state,action)=>{
+            state.hands = action.payload
         }
     }
 });
 
-export const { setremotescreen,setremotestream,setscreen,setvideo,setaudio,setmapping,setpinname,setpinvideo}=slice1.actions;
+export const { setremotescreen,setremotestream,setscreen,setvideo,setaudio,setmapping,setpinname,setpinvideo,sethands}=slice1.actions;
 export const reducer1=slice1.reducer;

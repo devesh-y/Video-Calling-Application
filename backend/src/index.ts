@@ -114,6 +114,9 @@ socketio.on("connection", (socket) => {
         let room=socketroom.get(socket.id);
         socket.to(room).emit("chatmessage", { name, message });
     })
+    socket.on("handonoff",({type,code})=>{
+        socket.to(code).emit("handonoff",{type,from:socket.id});
+    })
     socket.on("disconnect",()=>{
         console.log("socket disconnected");
         if(socketroom.get(socket.id)){

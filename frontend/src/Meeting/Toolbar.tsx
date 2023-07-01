@@ -3,14 +3,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { SocketContext } from "../Socket/SocketClient";
 import { useSelector, useDispatch } from "react-redux"
 import { peerservice } from "../WebRTC/p2p";
-import { setscreen ,setvideo,setaudio} from "../ReduxStore/slice1";
+import { setscreen ,setvideo,setaudio,sethands} from "../ReduxStore/slice1";
 import { BsMic, BsMicMute, BsPeople, BsChatLeftText } from "react-icons/bs";
 import { BiVideoOff, BiVideo } from "react-icons/bi";
 import { TbScreenShare, TbScreenShareOff } from "react-icons/tb";
 import { FaRegHandPaper } from "react-icons/fa";
 import { MdCallEnd } from "react-icons/md";
 import "./toolbar.css"
-import { Socket } from "socket.io-client";
+
 function Toolbars() {
     const {code}=useParams();
     const videoref=useRef<HTMLDivElement| null>(null);
@@ -26,7 +26,8 @@ function Toolbars() {
     const remotestream = useSelector((state: any) => state.slice1.remotestream);
     const video=useSelector((state:any)=>state.slice1.video);
     const audio = useSelector((state: any) => state.slice1.audio);
-    const mapping:Map<Socket,peerservice> = useSelector((state: any) => state.slice1.mapping);
+    const mapping:Map<string,peerservice> = useSelector((state: any) => state.slice1.mapping);
+    const hands: Map<string, string> = useSelector((state: any) => state.slice1.hands);
     const dispatch = useDispatch();
     useEffect(()=>{
         socket.on("sendtrack",(data:any)=>{
@@ -262,10 +263,18 @@ function Toolbars() {
         <div title="Raise Hand" onClick={(e: any) => {
             if (raisehand === "off") {
                 sethand("on")
+                socket.emit("handonoff",{type:"raise",code});
+                let thands=new Map(hands);
+                thands.set(socket.id,"You");
+                dispatch(sethands(thands));
                 e.currentTarget.style.backgroundColor = "#407fbf"
             }
             else {
-                sethand("off")
+                sethand("off");
+                socket.emit("handonoff", { type: "lower", code });
+                let thands = new Map(hands);
+                thands.delete(socket.id);
+                dispatch(sethands(thands));
                 e.currentTarget.style.backgroundColor = "rgb(92, 87, 87)";
             }
         }} className="toolicons">

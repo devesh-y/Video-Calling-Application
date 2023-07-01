@@ -54,10 +54,14 @@
     overflow: hidden;
 }
 #side-screen{
-    flex-basis: 200px;
+    flex-basis: 220px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-width: 220px;
+    max-width: 220px;
 }
 .pinicon{
-    display: none;
+    visibility: hidden;
     background-color: rgba(255, 255, 255, 0.8);
     padding: 10px;
     border-radius: 50%;
@@ -65,10 +69,10 @@
     z-index: 50;
 }
 .userview:hover > .pinicon{
-    display: inherit;
+    visibility: visible;
 }
 .usergrid {
-
+    position: relative;
     width: 200px;
     height: 200px;
     display: flex;

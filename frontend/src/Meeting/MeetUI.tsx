@@ -9,8 +9,8 @@ import Toolbars from "./Toolbar";
 import Chatpanel from "./ChatPanel";
 import PeoplePanel from "./PeoplePanel";
 import { BsPinAngleFill } from "react-icons/bs";
-import { setremotescreen, setremotestream ,setmapping,setpinname,setpinvideo } from "../ReduxStore/slice1";
-import { Socket } from "socket.io-client";
+import { setremotescreen, setremotestream ,setmapping,setpinname,setpinvideo,sethands } from "../ReduxStore/slice1";
+
 const Myvideo = memo((props: any) => {
     const { selfname,pinscreenid } = props;
     const video:MediaStream|null=useSelector((state:any)=>state.slice1.video);
@@ -120,10 +120,11 @@ const Videos = memo((props: any) => {
     const socket = useContext(SocketContext);
     const tracknumber=useRef(new Map<peerservice,number>());
     const peerstreams = useRef(new Map<peerservice, Array<MediaStream | null | string>>());
-    const mapping = useRef(new Map<Socket,peerservice>());
+    const mapping = useRef(new Map<string,peerservice>());
     const video:MediaStream|null=useSelector((state:any)=>state.slice1.video);
     const audio: MediaStream|null = useSelector((state: any) => state.slice1.audio);
     const screen:MediaStream|null= useSelector((state:any)=>state.slice1.screen);
+    const hands:Map<string,string>=useSelector((state:any)=>state.slice1.hands);
     const peerscreens=useRef(new Map<peerservice,Array<MediaStream|string>>());
     const trackid=useRef(new Set<string>());
     const pinscreenref =useRef<HTMLVideoElement | null>(null);
@@ -398,9 +399,12 @@ const Videos = memo((props: any) => {
                 dispatch(setpinvideo(null));
                 dispatch(setpinname("You"));
             }
+            let thands=new Map(hands);
+            thands.delete(from);
+            dispatch(sethands(thands));
             
         }
-    },[])
+    },[hands])
     const gettinganswerfunc = useCallback(async (data:any) => {
         const { answer, from }=data;
         console.log("answers coming");
@@ -449,11 +453,16 @@ const Videos = memo((props: any) => {
         socket.on("stopvideo", stopvideofunc)
         socket.on("stopaudio", stopaudiofunc)
         socket.on("stopscreen", stopscreenfunc)
-        socket.on("disconnectuser", disconnectuserfunc);
+        
         socket.on("trackinfo",trackinfofunc);
 
     }, [])
-
+    useEffect(()=>{
+        socket.on("disconnectuser", disconnectuserfunc);
+        return ()=>{
+            socket.off("disconnectuser");
+        }
+    },[hands])
     useEffect(()=>{
         if (pinvideo?.getVideoTracks()[0].readyState==="ended"){
             dispatch(setpinvideo(null));
@@ -481,7 +490,7 @@ const Videos = memo((props: any) => {
             </div>
             <div className="usertitle" >{pinname}</div>
         </div>
-        <div id="side-screen">
+        <div id="side-screen" className="myscrollbar">
             <Myvideo selfname={selfname} pinscreenid={pinscreenid}/>
             <Participants pinscreenid={pinscreenid} />
             <Screens pinscreenid={pinscreenid} />
