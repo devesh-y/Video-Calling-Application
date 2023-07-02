@@ -54,11 +54,23 @@
     overflow: hidden;
 }
 #side-screen{
-    flex-basis: 220px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    min-width: 220px;
-    max-width: 220px;
+    flex-basis: 210px;
+    overflow: auto;
+    min-width: 210px;
+    max-width: 210px;
+    display: flex;
+    flex-direction: column;
+}
+@media screen and (max-width: 450px) {
+    #crowdmeet {
+        flex-direction: column;
+    }
+
+    #side-screen {
+        flex-direction: row;
+        min-width: initial;
+        max-width: initial;
+    }
 }
 .pinicon{
     visibility: hidden;
@@ -73,8 +85,10 @@
 }
 .usergrid {
     position: relative;
-    width: 200px;
-    height: 200px;
+    min-width: 200px;
+    min-height: 200px;
+    max-width: 200px;
+    max-height: 200px;
     display: flex;
     flex-direction: column;
 }
@@ -106,4 +120,29 @@
     justify-content: center;
     padding: 10px;
     border-radius: 50%;
+}
+
+.myscrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+.myscrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.myscrollbar::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.myscrollbar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+.myscrollbar::-webkit-scrollbar-thumb:horizontal {
+    background: #888;
+}
+
+.myscrollbar::-webkit-scrollbar-thumb:hover:horizontal {
+    background: #555;
 }
