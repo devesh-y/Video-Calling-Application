@@ -42,7 +42,8 @@ const Chatpanel = memo((props: any) => {
         <div className="crossbutton" onClick={() => {
             (document.getElementById("panelchat") as HTMLElement).style.right = "-400px";
         }}> <RxCross1 /> </div>
-        <div id="showchat">
+        <p style={{ backgroundColor: "#a2f6fc", padding: "10px", borderRadius: "10px" }}>Chat Messages</p>
+        <div id="showchat" className="myscrollbar">
             {chats.map((value: Array<String>, index: any) => {
                 return <div key={index} className="userchat">
                     <pre style={{ marginBottom: "3px" }}><span style={{ fontWeight: "600" }}>{value[0]}</span>     <span style={{ opacity: "0.6" }}>{value[1]}</span> </pre>

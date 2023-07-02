@@ -1,0 +1,31 @@
+
+#endcontainer {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 40px;
+    text-align: center;
+    background-color: #f1f1f1;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+
+#endbutton {
+    margin: auto;
+    margin-top: 10px;
+    display: block;
+    padding: 12px 24px;
+    font-size: 16px;
+    text-align: center;
+    text-decoration: none;
+    background-color: #4CAF50;
+    width: fit-content;
+   
+    color: #fff;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+#endbutton:hover {
+    background-color: #45a049;
+}
