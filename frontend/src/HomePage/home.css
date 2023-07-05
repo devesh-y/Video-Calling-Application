@@ -7,22 +7,23 @@
     padding: 2px 7px;
     border-radius: 10px;
     font-family: "BarkingCat";
-    margin: 20px;
-    margin-bottom: 100px;
+    margin-left: 20px;
+    margin-top: 20px;
+    margin-bottom: 70px;
 }
 
 #container {
     display: flex;
     margin: 0px 50px;
     gap: 40px;
-    flex-wrap: wrap;
+    
 }
 
 #main{
-    flex: 1 1 400px;
+    flex: 1 1 50%;
 }
 #key-features {
-    flex: 1 1 48% ;
+    flex-grow: 1;
     background-color: rgb(4, 162, 236);
     border-radius: 20px;
     color: white;
@@ -30,8 +31,25 @@
     padding: 20px 30px;
     display: flex;
     align-items: center;
+    justify-content: center;
    
 
+}
+@media screen and (max-width: 450px) {
+    #container{
+        margin: 0px 10px;
+    }
+}
+@media screen and (max-width: 1000px) {
+    #main{
+        flex: initial;
+    }
+   #container{
+    flex-direction: column;
+   }
+   #key-features{
+    flex: initial;
+   }
 }
 #name{
     font-size: 1.1em;
