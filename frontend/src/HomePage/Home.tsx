@@ -61,7 +61,7 @@ function Meet_create(){
     </>
 }
 function Home() {
-    return <>
+    return <div>
         <div id="logo">
             CrowdConnect
         </div>
@@ -83,7 +83,7 @@ function Home() {
             </div>
         </div>
         <p style={{ marginLeft: "50px", marginTop: "50px" }} ><a style={{ textDecoration: "none", color: "#0238fd", fontWeight: "700" }} href="https://github.com/devesh-y/Video-Calling-Application#readme" target="_blank">Learn More</a> about CrowdConnect</p>
-    </>
+    </div>
         
 
 }
