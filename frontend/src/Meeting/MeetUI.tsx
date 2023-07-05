@@ -486,7 +486,7 @@ const Videos = memo((props: any) => {
         <PeoplePanel selfname={selfname} />
         <div id="pin-screen">
             <div className="userview">
-                {pinvideo === null ? <div className="avatar" style={{ backgroundColor: `green` }}>{pinname[0]} </div> : <video ref={pinscreenref} style={{aspectRatio:16/9,maxWidth:"100%", maxHeight:"100%",overflowY:"hidden"}}  autoPlay muted  height="100%"  />}
+                {pinvideo === null ? <div className="avatar" style={{ backgroundColor: `green` }}>{pinname[0]} </div> : <video ref={pinscreenref} style={{maxWidth:"100%", maxHeight:"100%",overflow:"hidden"}}  autoPlay muted  height="100%" width="100%" />}
             </div>
             <div className="usertitle" >{pinname}</div>
         </div>
