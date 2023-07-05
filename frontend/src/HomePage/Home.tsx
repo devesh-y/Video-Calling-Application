@@ -55,7 +55,7 @@ function Meet_create(){
         <div id="meet-creation">
             <button onClick={newmeeting}>New meeting</button>
             <input type="text" value={code} placeholder="Enter an existing code" onChange={(e)=>setcode(e.target.value)}></input>
-            {code != "" ? <p onClick={joinmeeting} >Join</p>:<></>}
+            {code === "" ? <p style={{visibility:"hidden"}} >Join</p> : <p onClick={joinmeeting} >Join</p>}
         </div>
         
     </>

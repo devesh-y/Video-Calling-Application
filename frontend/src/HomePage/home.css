@@ -64,6 +64,7 @@
 }
 #meet-creation {
     display: flex;
+    gap: 10px;
 }
 
 #meet-creation>input {
@@ -82,14 +83,12 @@
     border-radius: 10px;
     color: white;
     font-size: 1.1em;
-    margin-right: 10px;
 }
 
 #meet-creation>p {
     height: inherit;
     display: flex;
     align-items: center;
-    margin-left: 10px;
     cursor: default;
     font-weight: 700;
     color: blue;
