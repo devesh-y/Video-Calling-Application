@@ -1,15 +1,13 @@
-import express from "express"
 import http from "http"
 import { config } from "dotenv";
 import { Server } from "socket.io";
 import crypto from "crypto";
 config();
-const app=express();
 
 setInterval(()=>{
     console.log("server is running");
 },60000)
-const httpserver=http.createServer(app);
+const httpserver=http.createServer();
 
 const socketio = new Server(httpserver,{
     cors: {
