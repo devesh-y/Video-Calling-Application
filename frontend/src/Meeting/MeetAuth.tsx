@@ -12,9 +12,9 @@ function Meet() {
     const [selfname, setselfname] = useState("")
     const [loading, setloading] = useState(true);
     function getCookieValue(cookieName:string):string|null {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = cookies[i].trim();
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
             if (cookie.indexOf(cookieName + '=') === 0) {
                 return cookie.substring(cookieName.length + 1);
             }
@@ -28,7 +28,7 @@ function Meet() {
         return ()=>{
             socket.off("join-meet");
         }
-    },[loading])
+    },[loading,socket])
     useEffect(()=>{
         if (location.state == undefined || location.state == null || location.state.permission!=true)
         {
@@ -38,7 +38,7 @@ function Meet() {
             setselfname(location.state.selfname);
             socket.emit("join-meet", { code, type: getCookieValue(code as string), name: location.state.selfname })
         }
-    },[])
+    },[code, location.state, navigate, socket])
     return (loading === true) ?
                 <div className="vfloader">
                         <ColorRing visible={true}  height="80" width="80" ariaLabel="blocks-loading" wrapperStyle={{}}  wrapperClass="blocks-wrapper" colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
