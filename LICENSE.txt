@@ -1,0 +1,47 @@
+SOFTWARE LICENSE AGREEMENT
+
+IMPORTANT: PLEASE READ THIS LICENSE AGREEMENT CAREFULLY BEFORE USING THE SOFTWARE. BY USING THE SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS AND CONDITIONS OF THIS LICENSE AGREEMENT.
+
+1. DEFINITIONS
+   a. "Software" refers to the video calling application provided by Devesh, including all associated components, documentation, and updates.
+   b. "User" refers to any person or entity that uses or accesses the Software.
+
+2. LICENSE GRANT
+   a. I hereby grants the User a non-exclusive, non-transferable, limited license to use the Software solely for personal or internal business purposes.
+   b. This license does not grant the User the right to sublicense, resell, distribute, lease, or otherwise commercially exploit the Software.
+
+3. RESTRICTIONS
+   a. The User may not reverse engineer, decompile, disassemble, attempt to derive the source code of, or decrypt the Software.
+   b. The User may not modify, adapt, alter, or create derivative works from the Software.
+   c. The User may not remove, obscure, or alter any copyright, trademark, or other proprietary notices contained in the Software.
+   d. The User may not use the Software for any unlawful or malicious purpose.
+
+4. SUPPORT AND UPDATES
+   a. We may provide updates, bug fixes, or support services at its discretion.
+   b. I am not obligated to provide any support, maintenance, or updates.
+
+5. INTELLECTUAL PROPERTY
+   a. The Software and all intellectual property rights, including but not limited to copyrights and trademarks, are owned by me.
+   b. This license does not grant the User any rights to use Devesh's name, logo, or trademarks.
+
+6. DISCLAIMER OF WARRANTIES
+   a. THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+   b. I do not warrant that the Software will be error-free, uninterrupted, or free of viruses or other harmful components.
+
+7. LIMITATION OF LIABILITY
+   a. I SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THE SOFTWARE.
+   b. IN NO EVENT SHALL Devesh'S TOTAL LIABILITY TO THE USER FOR ALL DAMAGES EXCEED THE AMOUNT PAID BY THE USER FOR THE SOFTWARE.
+
+8. TERMINATION
+   a. This license is effective until terminated by the User or me.
+   b. I may terminate this license at any time without notice if the User breaches any terms of this agreement.
+   c. Upon termination, the User must cease all use of the Software and destroy all copies in their possession.
+
+9. GOVERNING LAW
+   a. This agreement shall be governed by and construed in accordance with the laws of India.
+
+10. ENTIRE AGREEMENT
+    a. This agreement constitutes the entire agreement between the User and me concerning the Software and supersedes all prior or contemporaneous agreements, representations, warranties, and understandings.
+
+By using the Software, the User acknowledges that they have read and understood this license agreement and agree to be bound by its terms and conditions.
+
