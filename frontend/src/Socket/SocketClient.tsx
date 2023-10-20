@@ -1,9 +1,6 @@
 import { createContext } from "react";
 import { io } from "socket.io-client";
-const socket = io("https://crowdconnect-eibo.onrender.com");
-// https://crowdconnect-eibo.onrender.com
-//http://localhost:5000
-
+const socket = io(`${import.meta.env.VITE_BACKEND}`);
 
 export const SocketContext = createContext(socket);
 

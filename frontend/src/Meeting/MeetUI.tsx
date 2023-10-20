@@ -516,12 +516,7 @@ const MeetUI = (props: any) => {
     }, [askers])
     const sendacknowledge = (e: any, key: any) => {
         let answer = e.target.innerText;
-        if (answer === "Accept") {
-            answer = true;
-        }
-        else {
-            answer = false;
-        }
+        answer = answer === "Accept";
         socket.emit("hostdecision", { answer, to: key })
         let temp = new Map(askers);
         temp.delete(key);
