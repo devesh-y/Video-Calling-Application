@@ -4,9 +4,7 @@ import { Server } from "socket.io";
 import crypto from "crypto";
 config();
 
-setInterval(()=>{
-    console.log("server is running");
-},60000)
+
 const httpserver=http.createServer();
 
 const socketio = new Server(httpserver,{

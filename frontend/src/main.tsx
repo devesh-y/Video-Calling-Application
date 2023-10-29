@@ -4,12 +4,13 @@ import Meet from './Meeting/MeetAuth.tsx'
 import Askjoin from './AskJoin/Askjoin.tsx'
 import Home from './HomePage/Home.tsx'
 import Endmeet from './Meeting/EndMeet.tsx'
-import SocketProvider from './Socket/SocketClient.tsx';
+import {socket} from './Socket/SocketClient.tsx';
+import { SocketContext } from './Socket/SocketClient.tsx'
 import { store } from './ReduxStore/store.tsx'
 import { Provider } from 'react-redux'
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <Provider store={store}>
-        <SocketProvider>
+        <SocketContext.Provider value={socket}>
             <BrowserRouter>
                 <Routes>
                     <Route path='/' element={<Home />} />
@@ -20,7 +21,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
                     <Route path='/end' element={<Endmeet />} />
                 </Routes>
             </BrowserRouter>
-        </SocketProvider>
+        </SocketContext.Provider>
     </Provider>
     
 
