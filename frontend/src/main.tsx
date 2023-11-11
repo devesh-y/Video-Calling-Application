@@ -4,8 +4,8 @@ import Meet from './Meeting/MeetAuth.tsx'
 import Askjoin from './AskJoin/Askjoin.tsx'
 import Home from './HomePage/Home.tsx'
 import Endmeet from './Meeting/EndMeet.tsx'
-import {socket} from './Socket/SocketClient.tsx';
-import { SocketContext } from './Socket/SocketClient.tsx'
+import {socket} from './Socket/SocketClient.ts';
+import { SocketContext } from './Socket/SocketClient.ts'
 import { store } from './ReduxStore/store.tsx'
 import { Provider } from 'react-redux'
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

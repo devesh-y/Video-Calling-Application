@@ -17,9 +17,9 @@ const Askjoin=()=>{
     const [valid,setvalid]=useState(false);
     const [askloader,setaskloader]=useState(false);
     function getCookieValue(cookieName: string): string | null {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = cookies[i].trim();
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
             if (cookie.indexOf(cookieName + '=') === 0) {
                 return cookie.substring(cookieName.length + 1);
             }
