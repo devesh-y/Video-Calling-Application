@@ -30,7 +30,7 @@ const Askjoin=()=>{
         let d = new Date();
         d.setTime(d.getTime() + (24 * 60 * 60 * 1000));
         let expires = "expires=" + d.toUTCString();
-        document.cookie = code + "=" + "host" + ";" + expires + ";path=/";
+        document.cookie = code + "=" + "participant" + ";" + expires + ";path=/";
     }
     function askhost(){
         socket.emit("askhost",{code,name:location.state.selfname});
