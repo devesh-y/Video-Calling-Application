@@ -1,13 +1,15 @@
-import {memo, useContext,useState,useEffect,useCallback} from "react"
-import { SocketContext } from "../Socket/SocketClient";
+import {memo, useContext, useState, useEffect, useCallback, useRef} from "react"
+import { SocketContext } from "../Socket/SocketClient.ts";
 import { RxCross1 } from "react-icons/rx"
 import { AiOutlineSend } from "react-icons/ai";
 import "./chatpanel.css"
-const Chatpanel = memo((props: any) => {
-    const { selfname } = props;
+const Chatpanel = memo(({selfname}:{selfname:string}) => {
+
     const socket = useContext(SocketContext);
     const [myinput, setmyinput] = useState("");
     const [chats, setchats] = useState<Array<Array<string>>>([]);
+    const panelChatRef=useRef<HTMLDivElement>(null);
+    const chatListRef=useRef<HTMLDivElement>(null);
     const getmessagetime = useCallback((): string => {
         const currentTime = new Date();
         const hours = currentTime.getHours();
@@ -16,35 +18,45 @@ const Chatpanel = memo((props: any) => {
         const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
         const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
         return `${formattedHours}:${formattedMinutes} ${amPm}`;
-    },[]) 
-    const sendMessage = () => {
+    },[])
+
+    const sendMessage =useCallback( () => {
         if (myinput === "") {
             return;
         }
         const messagetime = getmessagetime();
         setchats([...chats, ["You", messagetime, myinput]])
-        socket.emit("chatmessage", { name: selfname, message: myinput })
+        socket.emit("chatmessage", { uName: selfname, message: myinput })
         setmyinput("");
 
-    }
+    },[chats, getmessagetime, myinput, selfname, socket])
+
+    const getMessage=useCallback(({ uName, message }:{uName:string,message:string}) => {
+        const messagetime = getmessagetime();
+        setchats([...chats, [uName, messagetime, message]])
+    },[chats, getmessagetime])
+
     useEffect(() => {
-        socket.on("chatmessage", ({ name, message }) => {
-            const messagetime = getmessagetime();
-            setchats([...chats, [name, messagetime, message]])
-        })
-        let container = (document.getElementById("showchat") as HTMLElement);
-        container.scrollTop = container.scrollHeight;
-        return () => {
-            socket.off("chatmessage")
+        socket.on("chatmessage",getMessage )
+        if(chatListRef.current)
+        {
+            chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
         }
-    }, [chats])
-    return <div id="panelchat">
+
+        return () => {
+            socket.off("chatmessage",getMessage)
+        }
+    }, [getMessage, socket])
+    return <div id="panelchat" ref={panelChatRef}>
         <div className="crossbutton" onClick={() => {
-            (document.getElementById("panelchat") as HTMLElement).style.right = "-400px";
+            if(panelChatRef.current) {
+                panelChatRef.current.style.right = "-400px";
+            }
+
         }}> <RxCross1 /> </div>
         <p style={{ backgroundColor: "#a2f6fc", padding: "10px", borderRadius: "10px" }}>Chat Messages</p>
-        <div id="showchat" className="myscrollbar">
-            {chats.map((value: Array<String>, index: any) => {
+        <div id="showchat" className="myscrollbar" ref={chatListRef}>
+            {chats.map((value, index) => {
                 return <div key={index} className="userchat">
                     <pre style={{ marginBottom: "3px" }}><span style={{ fontWeight: "600" }}>{value[0]}</span>     <span style={{ opacity: "0.6" }}>{value[1]}</span> </pre>
                     <pre>{value[2]} </pre>

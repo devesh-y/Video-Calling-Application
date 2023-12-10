@@ -1,48 +1,52 @@
 import { RxCross1 } from "react-icons/rx"
-import {memo, useContext, useEffect} from "react"
+import {memo, useCallback, useContext, useEffect, useRef} from "react"
 import {useDispatch, useSelector} from "react-redux"
-import { peerservice } from "../WebRTC/p2p";
 import "./peoplepanel.css"
-import { SocketContext } from "../Socket/SocketClient";
-import { sethands } from "../ReduxStore/slice1";
-const PeoplePanel = memo((props: any) => {
-    const { selfname } = props;
-    const remotestream:Map<peerservice,Array<MediaStream|null|string>>=useSelector((state:any)=>state.slice1.remotestream);
-    const hands:Map<string,string>=useSelector((state:any)=>state.slice1.hands);
+import { SocketContext } from "../Socket/SocketClient.ts";
+import { sethands } from "../../ReduxStore/slice1.ts";
+import {StoreType} from "../../ReduxStore/store.ts";
+const PeoplePanel = memo(({selfname}:{selfname:string}) => {
+    
+    const remotestream=useSelector((state:StoreType)=>state.slice1.remotestream);
+    const hands=useSelector((state:StoreType)=>state.slice1.hands);
     const dispatch=useDispatch();
-    const mapping:Map<string,peerservice>=useSelector((state:any)=>state.slice1.mapping);
+    const mapping=useSelector((state:StoreType)=>state.slice1.mapping);
     const socket=useContext(SocketContext);
+    const panelPeopleRef=useRef<HTMLDivElement>(null);
+    const handOnOffFunc=useCallback(({type,from}:{type:string,from:string})=>{
+        if(type==="raise"){
+            const peer = mapping.get(from);
+            if (peer) {
+                if (remotestream.get(peer)) {
+                    const temp = new Map(hands);
+                    temp.set(from, remotestream.get(peer)?.[2] as string);
+                    dispatch(sethands(temp)) ;
+                }
+            }
+        }
+        else{
+            const temp=new Map(hands);
+            temp.delete(from);
+            dispatch(sethands(temp)) ;
+        }
+
+    },[dispatch, hands, mapping, remotestream])
     useEffect(()=>{
-        socket.on("handonoff",({type,from})=>{
-            if(type==="raise"){
-                const peer = mapping.get(from);
-                if (peer) {
-                    if (remotestream.get(peer)) {
-                        let temp = new Map(hands);
-                        temp.set(from, (remotestream.get(peer) as Array<MediaStream | null | string>)[2] as string);
-                        dispatch(sethands(temp)) ;
-                    }
-                } 
-            }
-            else{
-                let temp=new Map(hands);
-                temp.delete(from);
-                dispatch(sethands(temp)) ;
-            }
-            
-        })
+        socket.on("handonoff",handOnOffFunc)
         return ()=>{
-            socket.off("handonoff");
+            socket.off("handonoff",handOnOffFunc);
         } 
-    },[mapping,remotestream,hands])
-    return <div id="panelpeople">
+    },[ socket, handOnOffFunc])
+    return <div id="panelpeople" ref={panelPeopleRef}>
         <div className="crossbutton" onClick={() => {
-            (document.getElementById("panelpeople") as HTMLElement).style.right = "-400px";
+            if(panelPeopleRef.current) {
+                panelPeopleRef.current.style.right = "-400px";
+            }
         }}> <RxCross1 />
         </div>
         <p style={{ backgroundColor: "#a2f6fc", padding: "10px", borderRadius: "10px" }}>Raised Hands</p>
         <div id="handslist" className="myscrollbar">
-            {Array.from(hands as Map<string, string>).map(([_socketid, name], index) => {
+            {Array.from(hands).map(([, name], index) => {
                 const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
                 const randomNumber = (Math.floor(Math.random() * 10)) % 9;
                 return <div key={index} className="userdetails">
@@ -57,7 +61,7 @@ const PeoplePanel = memo((props: any) => {
                 <div className="avatar" style={{ backgroundColor: "red" }}>{(selfname as string)[0]}</div>
                 <div className="panelpeoname">{selfname as string} (You)</div>
             </div>
-            {Array.from(remotestream as Map<peerservice, Array<string | MediaStream>>).map(([_peer, data], index) => {
+            {Array.from(remotestream).map(([, data], index) => {
                 const colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "cyan", "magenta"];
                 const randomNumber = (Math.floor(Math.random() * 10)) % 9 ;
                 return <div key={index} className="userdetails">

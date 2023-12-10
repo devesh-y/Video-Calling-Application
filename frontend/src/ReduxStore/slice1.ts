@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { peerservice } from "../WebRTC/p2p";
+import { peerservice } from "../components/WebRTC/p2p";
 
 const slice1=createSlice({
     name:"slice1",

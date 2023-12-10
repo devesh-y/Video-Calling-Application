@@ -1,8 +1,10 @@
-import { useContext, useEffect, useState} from "react"
+import {useCallback, useContext, useEffect, useState} from "react"
 import "./askjoin.css"
-import { SocketContext } from "../Socket/SocketClient"
+import { SocketContext } from "../Socket/SocketClient.ts"
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ColorRing } from "react-loader-spinner";
+import {getCookieValue,setcookie} from "../../utils/getSetCookie.ts";
+
 const WrongPage = () => {
     return <>
         <p>This link is either invalid or expired</p>
@@ -16,41 +18,37 @@ const Askjoin=()=>{
     const [checking,setchecking]=useState(true);
     const [valid,setvalid]=useState(false);
     const [askloader,setaskloader]=useState(false);
-    function getCookieValue(cookieName: string): string | null {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.indexOf(cookieName + '=') === 0) {
-                return cookie.substring(cookieName.length + 1);
-            }
-        }
-        return null;
-    }
-    function setcookie(){
-        let d = new Date();
-        d.setTime(d.getTime() + (24 * 60 * 60 * 1000));
-        let expires = "expires=" + d.toUTCString();
-        document.cookie = code + "=" + "participant" + ";" + expires + ";path=/";
-    }
-    function askhost(){
+
+    const askhost=useCallback(()=>{
         socket.emit("askhost",{code,name:location.state.selfname});
         setaskloader(true);
-    }
-    useEffect(()=>{
-        socket.on("hostdecision",(answer)=>{
-            if(answer===true){
-                setcookie();
-                navigate(`/${code}`, { state: { permission: true, selfname: location.state.selfname }, replace: true });
-            }
-            else{
-                setaskloader(false);
-                alert("Host denied your request");
-
-            }
-        })
+    },[code, location, socket])
+    const hostDecisionfunc=useCallback((answer:boolean)=> {
+        if (answer) {
+            setcookie(code as string,"participant");
+            navigate(`/${code}`, {state: {permission: true, selfname: location.state.selfname}, replace: true});
+        } else {
+            setaskloader(false);
+            alert("Host denied your request");
+        }
+    },[code, location, navigate])
+    const checkMeetFunc=useCallback((chk:boolean)=>{
+        if(chk){
+            setvalid(true);
+        }
+        else{
+            setvalid(false);
+        }
+        setchecking(false);
     },[])
     useEffect(()=>{
-        if(location.state==undefined || location.state==null || location.state.selfname==""){
+        socket.on("hostdecision",hostDecisionfunc)
+        return ()=>{
+            socket.off("hostdecision",hostDecisionfunc)
+        }
+    },[hostDecisionfunc, socket])
+    useEffect(()=>{
+        if(location.state == undefined || location.state.selfname==""){
             console.log("navigating to home page");
             navigate(`/`, { state: { code }, replace: true });
             return;
@@ -61,22 +59,14 @@ const Askjoin=()=>{
         else{
             socket.emit("check-meet",code);
         }
-    },[])
+    },[code, location, navigate, socket])
     useEffect(()=>{
-        socket.on("check-meet",(chk)=>{
-            if(chk===false){
-                setvalid(false);
-            }
-            else{
-                setvalid(true);
-            }
-            setchecking(false);
-        })
+        socket.on("check-meet",checkMeetFunc)
         return ()=>{
-            socket.off("check-meet");
+            socket.off("check-meet",checkMeetFunc);
         }
-    }, [checking,valid])
-    return (checking === true)?    
+    }, [checkMeetFunc, socket])
+    return checking?
         <div id="askcontainer">
             <ColorRing
             visible={true}
@@ -88,7 +78,7 @@ const Askjoin=()=>{
             colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']} />
         </div> 
     
-        : (valid=== true) ?
+        : valid ?
                         <div id="askcontainer">
                             <div id="askbox">
                                 <div id="askjoinlogo">

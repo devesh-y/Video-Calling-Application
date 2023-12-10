@@ -1,7 +1,8 @@
 import "./home.css"
-import { useContext, useEffect, useState} from "react"
-import { SocketContext } from "../Socket/SocketClient";
+import {useCallback, useContext, useEffect, useState} from "react"
+import { SocketContext } from "../Socket/SocketClient.ts";
 import { useLocation, useNavigate } from "react-router-dom";
+import {setcookie} from "../../utils/getSetCookie.ts";
 
 function Meet_create(){
     const [name,setname]=useState("");
@@ -9,47 +10,46 @@ function Meet_create(){
     const navigate = useNavigate();
     const location=useLocation();
     const [code, setcode] = useState("");
-    function joinmeeting(){
+    const joinmeeting=useCallback(()=>{
         if(name===""){
             alert("Enter name");
             return;
         }
-        if(socket.connected===false){
+        if(!socket.connected){
             alert("Let the server restart. (max - 30s)")
             return;
         }
         
         navigate(`/${code}/ask`, { state: { selfname: name }, replace: true });
 
-    }
-    function newmeeting(){
+    },[code, name, navigate, socket])
+    const createRoomFunc=useCallback((code:string)=>{
+        setcookie(code,"host");
+        navigate(`/${code}/ask`, { state: { selfname: name }, replace: true });
+    },[name, navigate])
+    const newmeeting=useCallback(()=>{
         if (name === "") {
             alert("Enter name");
             return;
         }
-        if (socket.connected === false) {
+        if (!socket.connected) {
             alert("Let the server restart. (max - 30s)")
             return;
         }
         socket.emit("create-room");
-        socket.on("create-room",(code)=>{
-            const d = new Date();
-            d.setTime(d.getTime() + (24 * 60 * 60 * 1000));
-            let expires = "expires=" + d.toUTCString();
-            document.cookie = code + "=" + "host" + ";" + expires + ";path=/";
-            navigate(`/${code}/ask`, { state: { selfname: name }, replace: true });
-            
-        })
 
+    },[name, socket])
+    useEffect(() => {
+        socket.on("create-room",createRoomFunc)
         return ()=>{
-            socket.off("create-room");
+            socket.off("create-room",createRoomFunc);
         }
-    }
+    }, [createRoomFunc,socket]);
     useEffect(()=>{
         if(location.state && location.state.code!=undefined){
             setcode(location.state.code);
         }
-    },[])
+    },[location])
     return <>
         <input id="name" type="text" placeholder="Enter your name" value={name} onChange={(e) => setname(e.target.value)} />
         <div id="meet-creation">

@@ -20,9 +20,9 @@ socketio.on("connection", (socket) => {
     console.log(`Total connected sockets: ${socketio.sockets.sockets.size}`);
     socket.on("create-room",()=>{
         const es = crypto.randomBytes(128).toString('base64').slice(0,20);
-        var code:string="";
-        var x:number=0;
-        for(var i=0;i<20 && code.length<=11;i++){
+        let code: string = "";
+        let x: number = 0;
+        for(let i=0; i<20 && code.length<=11; i++){
             if((es[i]>='a' && es[i]<='z') || (es[i]>='A' && es[i]<='Z')|| (es[i]>='0' && es[i]<'9')){
                 code+=es[i];
                 x++;
@@ -37,7 +37,7 @@ socketio.on("connection", (socket) => {
         console.log("room created");
         
     });
-    socket.on("check-meet",(code)=>{
+    socket.on("check-meet",(code:string)=>{
         if (socketio.sockets.adapter.rooms.has(code)) {
             socket.emit("check-meet", true);
         }
@@ -45,7 +45,7 @@ socketio.on("connection", (socket) => {
             socket.emit("check-meet", false);
         }
     })
-    socket.on("join-meet",({code,type,name})=>{
+    socket.on("join-meet",({code,type,name}:{code:string,type:string,name:string})=>{
         socket.join(code);
         socketroom.set(socket.id,code);
         socketusername.set(socket.id,name);
@@ -56,60 +56,61 @@ socketio.on("connection", (socket) => {
     })
 
     //sending offer to new user from existing
-    socket.on("redirectoffers",({to,offer,selfname})=>{
+    socket.on("redirectoffers",({to,offer,selfname}:{to:string,offer:RTCSessionDescriptionInit ,selfname:string})=>{
         socket.to(to).emit("offerscame",{offer,from:socket.id,remotename:selfname});
     })
 
     //triggering existing users to send offers to new user
-    socket.on("sendoffers",({code,selfname})=>{        
+    socket.on("sendoffers",({code,selfname}:{code:string,selfname:string})=>{
         socket.to(code).emit("sendoffers",{to:socket.id,remotename:selfname});
     })
     
 
     //sending answers - both
-    socket.on("sendAnswer",({to,myanswer })=>{
+    socket.on("sendAnswer",({to,myanswer }:{to:string,myanswer:RTCSessionDescriptionInit})=>{
         socket.to(to).emit("sendAnswer",{answer:myanswer,from:socket.id});
     })
 
 
     //handling negotiation
-    socket.on("peer:negoNeeded",({offer,to})=>{
+    socket.on("peer:negoNeeded",({offer,to}:{offer:RTCSessionDescriptionInit,to:string})=>{
         socket.to(to).emit("peer:negoNeeded",{from:socket.id,offer});
     })
 
-    socket.on("peer:negodone",({to,answer})=>{
+    socket.on("peer:negodone",({to,answer}:{to:string,answer:RTCSessionDescriptionInit})=>{
         socket.to(to).emit("peer:negofinal",{from:socket.id,answer})
     })
 
-    socket.on("stopvideo",(code)=>{
+    socket.on("stopvideo",(code:string)=>{
         socket.to(code).emit("stopvideo",socket.id);
     })
-    socket.on("stopaudio",(code)=>{
+    socket.on("stopaudio",(code:string)=>{
         socket.to(code).emit("stopaudio",socket.id);
     })
-    socket.on("stopscreen",(code)=>{
+    socket.on("stopscreen",(code:string)=>{
         socket.to(code).emit("stopscreen", socket.id);
     })
-    socket.on("trackinfo",({id,code})=>{
+    socket.on("trackinfo",({id,code}:{id:string,code:string})=>{
         socket.to(code).emit("trackinfo",{id,from:socket.id});
     })
-    socket.on("sendtrack",({id,from})=>{
+    socket.on("sendtrack",({id,from}:{id:string,from:string})=>{
         socket.to(from).emit("sendtrack",{id,from:socket.id});
     })
     //asking permission of host to enter
-    socket.on("askhost",({code,name})=>{
+    socket.on("askhost",({code,name}:{code:string,name:string})=>{
         let temphost=roomhost.get(code);
         socket.to(temphost).emit("askhost",{name,to:socket.id});
+        console.log("asking to ",temphost)
     })
-    socket.on("hostdecision",({answer,to})=>{
+    socket.on("hostdecision",({answer,to}:{answer:boolean,to:string})=>{
         socket.to(to).emit("hostdecision",answer);
     })
     //sending chat messages
-    socket.on("chatmessage",({name,message})=>{
+    socket.on("chatmessage",({uName,message}:{uName:string,message:string})=>{
         let room=socketroom.get(socket.id);
-        socket.to(room).emit("chatmessage", { name, message });
+        socket.to(room).emit("chatmessage", { uName, message });
     })
-    socket.on("handonoff",({type,code})=>{
+    socket.on("handonoff",({type,code}:{type:string,code:string})=>{
         socket.to(code).emit("handonoff",{type,from:socket.id});
     })
     socket.on("disconnect",()=>{
