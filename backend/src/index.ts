@@ -9,7 +9,7 @@ const httpserver=http.createServer();
 
 const socketio = new Server(httpserver,{
     cors: {
-        origin: `${process.env.WEBSITE}`
+        origin: [`${process.env.WEBSITE}`]
     }
 });
 const socketroom=new Map();
